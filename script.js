@@ -99,12 +99,6 @@ document.querySelector('.kapat').addEventListener('click', perdeKapat);
 perde.addEventListener('click', e => { if (e.target === perde) perdeKapat(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') perdeKapat(); });
 
-// açılış
-if (location.hash.slice(1) === 'about') {
-  document.getElementById('hakkinda').click();
-} else {
-  ac(ISLER[location.hash.slice(1)] ? location.hash.slice(1) : 'grid');
-}
 
 
 
@@ -171,5 +165,12 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') gecis(-1);
   if (e.key === 'ArrowRight') gecis(1);
 });
+
+// açılış
+if (location.hash.slice(1) === 'about') {
+  document.getElementById('hakkinda').click();
+} else {
+  ac(ISLER[location.hash.slice(1)] ? location.hash.slice(1) : 'grid');
+}
 
 seritYaz();

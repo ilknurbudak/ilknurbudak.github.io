@@ -251,7 +251,8 @@ body{
   /* masaüstü listesi ve iletişim bloğu burada görünmüyor */
   .katalog,
   #hakkinda,
-  .iletisim{ display:none; }
+  .iletisim,
+  .korner .ig{ display:none; }
 
   .serit{
     display:flex;
