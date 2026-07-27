@@ -219,7 +219,8 @@ body{
    Masaüstünde yok. Yalnızca tablet ve telefonda beliriyor. */
 
 .serit,
-.noktalar{ display:none; }
+.noktalar,
+.alt-iletisim{ display:none; }
 
 /* ---------------------------------------------- tablet ve telefon
    Sol sütun kalkar. Ad üstte ortalı, altında kaydırmalı gezinme,
@@ -311,6 +312,28 @@ body{
   .nokta.acik{ opacity:1; }
 
   .sahne{ flex:1 1 auto; min-height:0; }
+
+  /* iletişim en altta, siyah zemin üzerinde */
+  .alt-iletisim{
+    flex:0 0 auto;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap:6px 16px;
+    width:100%;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:#000;
+    border-top:1px solid rgba(255,255,255,0.14);
+  }
+
+  .alt-iletisim a{
+    font-size:clamp(11px, 3vw, 13px);
+    letter-spacing:0.01em;
+    color:#fff;
+    text-decoration:none;
+    opacity:0.85;
+  }
 
   .yardim,.kapat{ right:14px; bottom:12px; }
   .perde-ic{ padding:22px 20px; }
