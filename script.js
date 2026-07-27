@@ -1,3 +1,6 @@
+// Tarayıcı eski kopyayı göstermesin diye her yayında değişen damga.
+const SURUM = '1785169648';
+
 const ISLER = {
   'grid': {
     ad: 'Generative Grid',
@@ -54,7 +57,7 @@ function ac(anahtar) {
   if (!is) return;
 
   acikIs = anahtar;
-  cerceve.src = is.yol;
+  cerceve.src = is.yol + '?v=' + SURUM;
   cerceve.title = is.ad;
 
   dugmeler.forEach(d => d.classList.toggle('acik', d.dataset.is === anahtar));
@@ -83,7 +86,7 @@ document.querySelector('.yardim').addEventListener('click', () => {
 // about: işlerle aynı sahnede açılır, katalogda numaralanmaz
 document.getElementById('hakkinda').addEventListener('click', () => {
   acikIs = null;
-  cerceve.src = 'works/about/index.html';
+  cerceve.src = 'works/about/index.html?v=' + SURUM;
   cerceve.title = 'about';
   dugmeler.forEach(d => d.classList.remove('acik'));
   document.getElementById('hakkinda').classList.add('acik');
