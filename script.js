@@ -59,6 +59,7 @@ function ac(anahtar) {
 
   dugmeler.forEach(d => d.classList.toggle('acik', d.dataset.is === anahtar));
   document.getElementById('hakkinda').classList.remove('acik');
+  if (typeof seritYaz === 'function') seritYaz();
 
   perdeBaslik.textContent = is.ad;
   perdeMetin.textContent = is.metin;
@@ -87,6 +88,7 @@ document.getElementById('hakkinda').addEventListener('click', () => {
   dugmeler.forEach(d => d.classList.remove('acik'));
   document.getElementById('hakkinda').classList.add('acik');
   history.replaceState(null, '', '#about');
+  if (typeof seritYaz === 'function') seritYaz();
 });
 
 function perdeKapat() {
@@ -105,24 +107,69 @@ if (location.hash.slice(1) === 'about') {
 }
 
 
-/* --- dar ekran menüsü ---------------------------------------------------
-   Masaüstünde bu düğme görünmüyor; burada yalnızca gövdeye sınıf ekleniyor,
-   yerleşimin tamamını CSS'teki dar ekran bloğu yapıyor. */
-const menuDugme = document.getElementById('menu');
 
-function menuKapat() {
-  document.body.classList.remove('menu-acik');
-  menuDugme.setAttribute('aria-expanded', 'false');
-  menuDugme.textContent = 'menu';
-}
+/* --- tablet ve telefon: kaydırmalı gezinme ------------------------------
+   Masaüstünde bu öğeler gizli. Sıra: sekiz iş, sonra about. */
 
-menuDugme.addEventListener('click', () => {
-  const acik = document.body.classList.toggle('menu-acik');
-  menuDugme.setAttribute('aria-expanded', acik ? 'true' : 'false');
-  menuDugme.textContent = acik ? 'close' : 'menu';
+const SIRA = Object.keys(ISLER).concat('about');
+
+const seritAd = document.getElementById('serit-ad');
+const noktaKutu = document.getElementById('noktalar');
+
+SIRA.forEach(() => {
+  const n = document.createElement('span');
+  n.className = 'nokta';
+  noktaKutu.appendChild(n);
 });
 
-// Bir iş ya da about seçilince menü kapansın.
-document.querySelectorAll('.is').forEach(d => d.addEventListener('click', menuKapat));
-document.getElementById('hakkinda').addEventListener('click', menuKapat);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') menuKapat(); });
+function seritYaz() {
+  const i = suankiSira();
+  const anahtar = SIRA[i];
+  const ad = anahtar === 'about' ? 'about' : ISLER[anahtar].ad;
+  const no = anahtar === 'about' ? '' : '<span class="no">' + String(i + 1).padStart(2, '0') + '</span>';
+  seritAd.innerHTML = no + ad;
+  noktaKutu.querySelectorAll('.nokta').forEach((n, j) => n.classList.toggle('acik', j === i));
+}
+
+function suankiSira() {
+  const i = SIRA.indexOf(acikIs === null ? 'about' : acikIs);
+  return i < 0 ? 0 : i;
+}
+
+function gecis(yon) {
+  const i = (suankiSira() + yon + SIRA.length) % SIRA.length;
+  const anahtar = SIRA[i];
+  if (anahtar === 'about') document.getElementById('hakkinda').click();
+  else ac(anahtar);
+  seritYaz();
+}
+
+document.getElementById('onceki').addEventListener('click', () => gecis(-1));
+document.getElementById('sonraki').addEventListener('click', () => gecis(1));
+
+// Parmakla yana kaydırma: şerit ve ad alanı üzerinde.
+// Sahnenin kendisi dinlenmiyor — orada iş çiziliyor, kaydırma onu bozardı.
+const serit = document.getElementById('serit');
+let basX = null, basY = null;
+
+serit.addEventListener('touchstart', e => {
+  basX = e.touches[0].clientX;
+  basY = e.touches[0].clientY;
+}, { passive: true });
+
+serit.addEventListener('touchend', e => {
+  if (basX === null) return;
+  const dx = e.changedTouches[0].clientX - basX;
+  const dy = e.changedTouches[0].clientY - basY;
+  if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) gecis(dx < 0 ? 1 : -1);
+  basX = basY = null;
+}, { passive: true });
+
+// Klavye okları da çalışsın.
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') gecis(-1);
+  if (e.key === 'ArrowRight') gecis(1);
+});
+
+seritYaz();

@@ -8,15 +8,20 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="apple-touch-icon" href="assets/favicon-180.png">
-<link rel="stylesheet" href="style.css?v=1785167551">
+<link rel="stylesheet" href="style.css?v=1785167851">
 </head>
 <body>
 
 <header class="korner">
   <h1 class="imza">İLKNUR BUDAK</h1>
 
-  <!-- yalnızca dar ekranda görünür -->
-  <button class="menu-dugme" id="menu" type="button" aria-expanded="false" aria-label="Menu">menu</button>
+  <!-- yalnızca dar ekranda görünür: kaydırmalı gezinme -->
+  <div class="serit" id="serit">
+    <button class="ok" id="onceki" type="button" aria-label="Previous">‹</button>
+    <span class="serit-ad" id="serit-ad"></span>
+    <button class="ok" id="sonraki" type="button" aria-label="Next">›</button>
+  </div>
+  <div class="noktalar" id="noktalar"></div>
 
   <nav class="katalog">
     <ol>
@@ -54,6 +59,6 @@
   </div>
 </div>
 
-<script src="script.js?v=1785167551"></script>
+<script src="script.js?v=1785167851"></script>
 </body>
 </html>
