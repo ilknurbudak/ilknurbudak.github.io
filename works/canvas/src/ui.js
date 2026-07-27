@@ -364,10 +364,8 @@ window.addEventListener('keydown', (e) => {
 const stage = $('#stage');
 ['dragenter', 'dragover'].forEach((ev) => stage.addEventListener(ev, (e) => { e.preventDefault(); if (!brushMode) stage.classList.add('hot'); }));
 ['dragleave', 'drop'].forEach((ev) => stage.addEventListener(ev, () => stage.classList.remove('hot')));
-stage.addEventListener('drop', async (e) => {
-  e.preventDefault();
-  if (brushMode) return;
-  for (const f of e.dataTransfer.files) {
+async function dosyalariAl(files) {
+  for (const f of files) {
     if (f.type.startsWith('image/')) {
       const img = new Image();
       img.src = URL.createObjectURL(f);
@@ -385,7 +383,21 @@ stage.addEventListener('drop', async (e) => {
     }
   }
   invalidateEdges(); buildAll(); resize(); draw();
+}
+
+stage.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (brushMode) return;
+  dosyalariAl(e.dataTransfer.files);
 });
+
+// Telefonda sürükle-bırak yok: dosya seçici.
+const dosyaGiris = $('#dosya');
+$('#yukle').onclick = () => dosyaGiris.click();
+dosyaGiris.onchange = (e) => {
+  dosyalariAl(e.target.files);
+  e.target.value = '';
+};
 
 // --- kayıt ---
 const overlay = $('#overlay');
