@@ -215,30 +215,131 @@ body{
 .kapat:hover,
 .kapat:focus-visible{ opacity:1; outline:none; }
 
-/* ---------------------------------------------- dar / alçak ekran
-   Sütun üstte yatay bir şeride dönüşür, iş yine kendi alanında kalır. */
+/* ---------------------------------------------- menü düğmesi
+   Masaüstünde yok; yalnızca dar ekranda beliriyor. */
 
-@media (max-width:720px), (max-height:420px){
+.menu-dugme{ display:none; }
+
+/* ---------------------------------------------- dar ekran
+   Sütun kalkar: üstte ince bir şerit, altında tam ekran sahne.
+   Katalog şeride sığmaya çalışmaz, tam ekran bir katman olarak açılır. */
+
+@media (max-width:720px){
+  html,body{ height:100dvh; }
+
   body{ flex-direction:column; }
 
   .korner{
+    flex:0 0 auto;
     width:100%;
     flex-direction:row;
-    align-items:baseline;
-    gap:20px;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
     padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.14);
   }
 
-  .katalog ol{
-    flex-direction:row;
-    gap:14px;
+  .imza{
+    font-size:17px;
+    letter-spacing:0;
   }
 
-  #hakkinda{ margin-top:0; margin-bottom:0; }
-  .iletisim{ margin-top:0; flex-direction:row; gap:12px; align-items:center; }
-  .ig{ align-self:center; }
-  .is{ width:auto; padding:0; }
-  .is::before{ width:auto; margin-right:6px; }
+  .menu-dugme{
+    display:block;
+    background:none;
+    border:0;
+    padding:4px 0;
+    font:inherit;
+    font-size:13px;
+    letter-spacing:0.01em;
+    color:#fff;
+    cursor:pointer;
+  }
+
+  /* katalog + about + iletişim: tam ekran katman */
+  .katalog,
+  #hakkinda,
+  .iletisim{
+    display:none;
+  }
+
+  body.menu-acik .katalog,
+  body.menu-acik #hakkinda,
+  body.menu-acik .iletisim{
+    display:flex;
+  }
+
+  body.menu-acik .korner{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    height:100dvh;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:0;
+    padding:14px 20px 28px;
+    background:#000;
+    overflow-y:auto;
+    border-bottom:0;
+  }
+
+  body.menu-acik .imza{
+    /* ad ile menü düğmesi ilk satırda yan yana kalsın */
+    flex:1 1 auto;
+  }
+
+  body.menu-acik .korner > .imza,
+  body.menu-acik .korner > .menu-dugme{
+    position:absolute;
+    top:14px;
+  }
+
+  body.menu-acik .korner > .imza{ left:20px; }
+  body.menu-acik .korner > .menu-dugme{ right:20px; }
+
+  body.menu-acik .katalog{
+    margin-top:64px;
+    width:100%;
+  }
+
+  body.menu-acik .katalog ol{ gap:0; }
+
+  body.menu-acik .is{
+    font-size:17px;
+    padding:11px 0;
+    opacity:0.75;
+  }
+
+  body.menu-acik .is.acik{ opacity:1; }
+  body.menu-acik .is::before{ width:2.6em; }
+
+  body.menu-acik #hakkinda{
+    margin:22px 0 0;
+    font-size:17px;
+    opacity:0.75;
+  }
+
+  body.menu-acik .iletisim{
+    margin-top:28px;
+    gap:6px;
+  }
+
+  body.menu-acik .iletisim a,
+  body.menu-acik .ig{ font-size:14px; }
+
+  body.menu-acik .ig{ margin-top:10px; align-self:flex-start; }
+
+  .sahne{ flex:1 1 auto; }
 
   .yardim,.kapat{ right:14px; bottom:12px; }
+
+  .perde-ic{ padding:22px 20px; }
+}
+
+/* Çok alçak ekran (yatay telefon): ad küçülsün, şerit incelsin. */
+@media (max-height:420px) and (max-width:900px){
+  .korner{ padding:9px 14px; }
+  .imza{ font-size:15px; }
 }

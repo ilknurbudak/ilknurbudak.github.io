@@ -103,3 +103,26 @@ if (location.hash.slice(1) === 'about') {
 } else {
   ac(ISLER[location.hash.slice(1)] ? location.hash.slice(1) : 'grid');
 }
+
+
+/* --- dar ekran menüsü ---------------------------------------------------
+   Masaüstünde bu düğme görünmüyor; burada yalnızca gövdeye sınıf ekleniyor,
+   yerleşimin tamamını CSS'teki dar ekran bloğu yapıyor. */
+const menuDugme = document.getElementById('menu');
+
+function menuKapat() {
+  document.body.classList.remove('menu-acik');
+  menuDugme.setAttribute('aria-expanded', 'false');
+  menuDugme.textContent = 'menu';
+}
+
+menuDugme.addEventListener('click', () => {
+  const acik = document.body.classList.toggle('menu-acik');
+  menuDugme.setAttribute('aria-expanded', acik ? 'true' : 'false');
+  menuDugme.textContent = acik ? 'close' : 'menu';
+});
+
+// Bir iş ya da about seçilince menü kapansın.
+document.querySelectorAll('.is').forEach(d => d.addEventListener('click', menuKapat));
+document.getElementById('hakkinda').addEventListener('click', menuKapat);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') menuKapat(); });
