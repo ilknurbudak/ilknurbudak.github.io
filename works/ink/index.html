@@ -43,7 +43,8 @@
 
   @media (max-width:900px){
       html,body{ height:auto; min-height:100svh; overflow-y:auto; overflow-x:hidden; }
-      body{ flex-direction:column; }
+      /* Dizilim body'de değil .wrap'te: çevrilmesi gereken o. */
+      .wrap{ flex-direction:column; height:auto; min-height:100svh; }
       .stage{
         position:sticky;
         top:0;
