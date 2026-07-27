@@ -83,8 +83,14 @@
   window.addEventListener("resize", resize);
 
   // ---- audio ----------------------------------------------------------------
+  // iOS: oturum türü "playback" olmazsa ses, telefonun sessiz anahtarına takılır.
+  function sesOturumu() {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+  }
+
   function ensureAudio() {
     if (ctx) return;
+    sesOturumu();
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     graph = PSSynth.buildGraph(ctx, state.echo);
     graph.master.gain.value = sesAcik ? 0.9 : 0;
@@ -96,7 +102,8 @@
 
   function unlockAudio() {
     ensureAudio();
-    if (ctx.state === "suspended") ctx.resume();
+    sesOturumu();
+    if (ctx.state !== "running") ctx.resume().then(sesYaz).catch(() => {});
     const b = ctx.createBuffer(1, 1, ctx.sampleRate);
     const k = ctx.createBufferSource();
     k.buffer = b; k.connect(ctx.destination); k.start(0);
@@ -105,7 +112,9 @@
   function sesYaz() {
     const b = document.getElementById("sound");
     if (b) {
-      b.textContent = "sound: " + (sesAcik ? "on" : "off");
+      let durum = sesAcik ? "on" : "off";
+      if (sesAcik && ctx && ctx.state !== "running") durum = "blocked";
+      b.textContent = "sound: " + durum;
       b.classList.toggle("on", sesAcik);
     }
     if (graph) graph.master.gain.value = sesAcik ? 0.9 : 0;

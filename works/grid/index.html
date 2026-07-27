@@ -476,8 +476,18 @@
     let masterGain = null;
     let audioReady = false;
 
+
+    /* iOS: Safari varsayılan olarak web sesini yan taraftaki sessiz anahtarına
+       bağlar. Oturum türünü "playback" yapınca ses o anahtardan etkilenmiyor. */
+    function sesOturumu(){
+      try{
+        if(navigator.audioSession) navigator.audioSession.type = "playback";
+      }catch(e){}
+    }
+
     function initAudio(){
       if(audioCtx) return;
+      sesOturumu();
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0;
@@ -663,12 +673,19 @@
     const sesBtn = document.getElementById("sesBtn");
     let sesAcik = false;
 
-    function sesYaz(){ sesBtn.textContent = "Sound: " + (sesAcik ? "on" : "off"); }
+    function sesYaz(){
+      let durum = sesAcik ? "on" : "off";
+      if(sesAcik && audioCtx && audioCtx.state !== "running") durum = "blocked";
+      sesBtn.textContent = "Sound: " + durum;
+    }
 
     sesBtn.addEventListener("click", () => {
       if(!sesAcik){
         unlockAudio();
-        if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        sesOturumu();
+        if(audioCtx && audioCtx.state !== "running"){
+          audioCtx.resume().then(sesYaz).catch(sesYaz);
+        }
         if(masterGain) masterGain.gain.value = 0.8;
         sesAcik = true;
       } else {
