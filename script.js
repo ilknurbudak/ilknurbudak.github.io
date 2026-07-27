@@ -1,5 +1,5 @@
 // Tarayıcı eski kopyayı göstermesin diye her yayında değişen damga.
-const SURUM = '1785170239';
+const SURUM = '1785170377';
 
 const ISLER = {
   'grid': {

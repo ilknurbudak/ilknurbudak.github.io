@@ -276,32 +276,15 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
-// ---------- default placeholder figure ----------
+// ---------- açılış kaynağı ----------
+// Yer tutucu çöp adam kaldırıldı: yalnızca gerçek çizim yükleniyor.
 function loadDefault(){
-  const w=600,h=820,t=document.createElement('canvas');t.width=w;t.height=h;
-  const g=t.getContext('2d'); g.fillStyle='#fff';
-  g.beginPath();g.ellipse(w*0.5,h*0.15,52,60,0,0,7);g.fill();
-  g.fillRect(w*0.5-22,h*0.23,44,44);
-  g.beginPath();g.moveTo(w*0.5-80,h*0.30);g.quadraticCurveTo(w*0.5,h*0.27,w*0.5+80,h*0.30);
-  g.lineTo(w*0.5+58,h*0.63);g.quadraticCurveTo(w*0.5,h*0.67,w*0.5-58,h*0.63);g.closePath();g.fill();
-  g.lineWidth=38;g.lineCap='round';g.strokeStyle='#fff';
-  g.beginPath();g.moveTo(w*0.5-66,h*0.33);g.quadraticCurveTo(w*0.5-132,h*0.46,w*0.5-104,h*0.64);g.stroke();
-  g.beginPath();g.moveTo(w*0.5+66,h*0.33);g.quadraticCurveTo(w*0.5+132,h*0.46,w*0.5+104,h*0.64);g.stroke();
-  g.lineWidth=46;
-  g.beginPath();g.moveTo(w*0.5-28,h*0.63);g.quadraticCurveTo(w*0.5-38,h*0.83,w*0.5-32,h*0.97);g.stroke();
-  g.beginPath();g.moveTo(w*0.5+28,h*0.63);g.quadraticCurveTo(w*0.5+38,h*0.83,w*0.5+32,h*0.97);g.stroke();
-  const yedek=new Image();
-  yedek.onload=()=>{ if(!curImg){curImg=yedek;buildSDF(yedek);} };
-  yedek.src=t.toDataURL();
-
-  // Açılış kaynağı: repodaki çizim. Yüklenemezse yukarıdaki yer tutucu kalır.
   const im=new Image();
   im.onload=()=>{curImg=im;buildSDF(im);};
   im.onerror=()=>{};
   im.src='source-drawing.jpg';
 }
 
-// ---------- UI ----------
 function bindRange(id,key){
   const el=document.getElementById(id), out=document.getElementById('v'+id[0].toUpperCase()+id.slice(1));
   const upd=()=>{P[key]=el.value/100; if(out)out.textContent=Math.round(el.value);};
