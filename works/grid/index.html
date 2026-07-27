@@ -673,6 +673,21 @@
     const sesBtn = document.getElementById("sesBtn");
     let sesAcik = false;
 
+    // Ses yolunun gerçekten çalıştığını duyurmak için kısa bir ton.
+    function testSesi(){
+      if(!audioCtx || !masterGain) return;
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = 440;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.35, now + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      o.connect(g); g.connect(masterGain);
+      o.start(now); o.stop(now + 0.24);
+    }
+
     function sesYaz(){
       let durum = sesAcik ? "on" : "off";
       if(sesAcik && audioCtx && audioCtx.state !== "running") durum = "blocked";
@@ -688,6 +703,7 @@
         }
         if(masterGain) masterGain.gain.value = 0.8;
         sesAcik = true;
+        testSesi();
       } else {
         if(masterGain) masterGain.gain.value = 0;
         sesAcik = false;

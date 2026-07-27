@@ -120,10 +120,25 @@
     if (graph) graph.master.gain.value = sesAcik ? 0.9 : 0;
   }
 
+  function testSesi() {
+    if (!ctx || !graph) return;
+    const now = ctx.currentTime;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 440;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.35, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    o.connect(g); g.connect(graph.master);
+    o.start(now); o.stop(now + 0.24);
+  }
+
   function sesDegistir() {
     sesAcik = !sesAcik;
     if (sesAcik) unlockAudio();
     sesYaz();
+    if (sesAcik) testSesi();
   }
 
   document.addEventListener("visibilitychange", () => {
