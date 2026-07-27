@@ -87,22 +87,39 @@
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     graph = PSSynth.buildGraph(ctx, state.echo);
+    graph.master.gain.value = sesAcik ? 0.9 : 0;
   }
 
   // iOS: ses bağlamı yalnızca bir jest içinde ve bir ses çalınarak açılıyor.
-  let sesAcildi = false;
+  // Bu yüzden kararı düğmeye bağladık: "sound: on" demeden ses çıkmıyor.
+  let sesAcik = false;
+
   function unlockAudio() {
     ensureAudio();
     if (ctx.state === "suspended") ctx.resume();
-    if (sesAcildi) return;
-    sesAcildi = true;
     const b = ctx.createBuffer(1, 1, ctx.sampleRate);
     const k = ctx.createBufferSource();
     k.buffer = b; k.connect(ctx.destination); k.start(0);
   }
-  ["touchend", "pointerdown"].forEach((t) =>
-    window.addEventListener(t, unlockAudio, { passive: true })
-  );
+
+  function sesYaz() {
+    const b = document.getElementById("sound");
+    if (b) {
+      b.textContent = "sound: " + (sesAcik ? "on" : "off");
+      b.classList.toggle("on", sesAcik);
+    }
+    if (graph) graph.master.gain.value = sesAcik ? 0.9 : 0;
+  }
+
+  function sesDegistir() {
+    sesAcik = !sesAcik;
+    if (sesAcik) unlockAudio();
+    sesYaz();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && ctx && ctx.state === "suspended") ctx.resume();
+  });
   function startPlayback() {
     ensureAudio();
     if (ctx.state === "suspended") ctx.resume();
@@ -411,6 +428,8 @@
     $("clear").addEventListener("click", () => { page().strokes = []; allNotesOff(); });
     $("undo").addEventListener("click", () => { page().strokes.pop(); });
     $("export").addEventListener("click", () => { ensureAudio(); exportWav(); });
+    $("sound").addEventListener("click", sesDegistir);
+    sesYaz();
 
     $("pagePrev").addEventListener("click", () => gotoPage(state.pageIndex - 1));
     $("pageNext").addEventListener("click", () => gotoPage(state.pageIndex + 1));

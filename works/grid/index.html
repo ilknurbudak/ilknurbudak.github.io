@@ -273,14 +273,13 @@
 
     <div class="section">
       <div class="section-title">Actions</div>
-      <div class="key-row"><span>New composition</span><span class="key">Space</span></div>
-      <div class="key-row"><span>Sound</span><span class="key">Click</span></div>
+      <button class="save-btn" id="sesBtn" type="button">Sound: off</button>
+      <button class="save-btn" id="yeniBtn" type="button">New composition</button>
       <button class="save-btn" id="saveBtn">Record</button>
     </div>
 
     <p class="hint">
-      Click the grid to turn sound on.<br>
-      Space builds a new composition.<br>
+      Tap the grid for a new composition.<br>
       Each colour plays its own note.
     </p>
   </aside>
@@ -481,7 +480,7 @@
       if(audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.8;
+      masterGain.gain.value = 0;
       masterGain.connect(audioCtx.destination);
       audioReady = true;
     }
@@ -640,18 +639,12 @@
       return true; // ilk tıklama sadece ses açtı
     }
 
-    // Dokunuş sayfanın herhangi bir yerinden gelse de ses açılsın.
-    ["touchend", "pointerdown"].forEach(t =>
-      window.addEventListener(t, () => {
-        if(!audioUnlocked) unlockAudio();
-        else if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
-      }, { passive: true })
-    );
+    // Sekmeye geri dönünce bağlam uykuya dalmışsa uyandır.
+    document.addEventListener("visibilitychange", () => {
+      if(!document.hidden && audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    });
 
     function resetComposition(){
-      // İlk tıklama sadece sesi başlatır, grid'i bozmaz
-      if(unlockAudio()) return;
-
       R = rng((Date.now() ^ ((Math.random()*1e9)>>>0)) >>> 0);
       seed = (Date.now() >>> 0);
       gosterilenSeed = seed;
@@ -665,6 +658,28 @@
     }
 
     canvas.addEventListener("pointerdown", resetComposition);
+
+    /* ---------- Ses aç/kapa ---------- */
+    const sesBtn = document.getElementById("sesBtn");
+    let sesAcik = false;
+
+    function sesYaz(){ sesBtn.textContent = "Sound: " + (sesAcik ? "on" : "off"); }
+
+    sesBtn.addEventListener("click", () => {
+      if(!sesAcik){
+        unlockAudio();
+        if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        if(masterGain) masterGain.gain.value = 0.8;
+        sesAcik = true;
+      } else {
+        if(masterGain) masterGain.gain.value = 0;
+        sesAcik = false;
+      }
+      sesYaz();
+    });
+
+    document.getElementById("yeniBtn").addEventListener("click", resetComposition);
+    sesYaz();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space"){

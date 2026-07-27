@@ -98,6 +98,13 @@
     }
 
     .key-row {
+      width: 100%;
+      background: none;
+      border: 0;
+      border-bottom: 1px solid #f5f5f5;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
       display: flex;
       justify-content: space-between;
       padding: 5px 0;
@@ -217,17 +224,16 @@
 
     <div class="section">
       <div class="section-title">Presets</div>
-      <div class="key-row"><span>INK (fine)</span><span class="key">1</span></div>
-      <div class="key-row"><span>DENSE</span><span class="key">2</span></div>
-      <div class="key-row"><span>WILD</span><span class="key">3</span></div>
+      <button class="key-row" id="b-ink" type="button"><span>INK (fine)</span><span class="key">1</span></button>
+      <button class="key-row" id="b-dense" type="button"><span>DENSE</span><span class="key">2</span></button>
+      <button class="key-row" id="b-wild" type="button"><span>WILD</span><span class="key">3</span></button>
     </div>
 
     <div class="section">
       <div class="section-title">Actions</div>
-      <div class="key-row"><span>New seed</span><span class="key">N</span></div>
-      <div class="key-row"><span>Blend mode</span><span class="key">B</span></div>
-      <div class="key-row"><span>Clear</span><span class="key">C</span></div>
-      <div class="key-row"><span>Save PNG</span><span class="key">S</span></div>
+      <button class="key-row" id="b-seed" type="button"><span>New seed</span><span class="key">N</span></button>
+      <button class="key-row" id="b-clear" type="button"><span>Clear</span><span class="key">C</span></button>
+      <button class="key-row" id="b-png" type="button"><span>Save PNG</span><span class="key">S</span></button>
     </div>
 
     <div class="section">
@@ -236,9 +242,8 @@
     </div>
 
     <p class="hint">
-      Marks accumulate, they never fade.<br>
-      Try blend modes with B.<br>
-      C clears, N draws a new seed.
+      Tap the canvas for a new drawing.<br>
+      Marks accumulate, they never fade.
     </p>
   </aside>
 

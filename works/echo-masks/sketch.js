@@ -192,18 +192,53 @@ function drawBrush(p) {
   }
 }
 
+// Panel düğmeleri ve klavye aynı işlere bağlanıyor.
+function yeniTohum() {
+  seed = floor(random(999999));
+  loadPreset(currentPreset);
+}
+
+function temizle() {
+  pgHalf.background(CONFIG.bgColor);
+}
+
+function pngKaydet() {
+  saveCanvas('EchoMasks_' + currentPreset + '_' + seed, 'png');
+}
+
+// Tuvale dokunmak yeni bir çizim üretir.
+function mousePressed() {
+  const el = document.getElementById('canvas-container');
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (mouseX >= 0 && mouseY >= 0 && mouseX <= width && mouseY <= height) yeniTohum();
+}
+
+function touchStarted() {
+  mousePressed();
+  return false;
+}
+
 function keyPressed() {
-  if (key === 'n' || key === 'N') {
-    seed = floor(random(999999));
-    loadPreset(currentPreset);
-  }
+  if (key === 'n' || key === 'N') yeniTohum();
   if (key === '1') loadPreset('INK');
   if (key === '2') loadPreset('DENSE');
   if (key === '3') loadPreset('WILD');
-  if (key === 'c' || key === 'C') {
-    pgHalf.background(CONFIG.bgColor);
-  }
-  if (key === 's' || key === 'S') {
-    saveCanvas('EchoMasks_' + currentPreset + '_' + seed, 'png');
-  }
+  if (key === 'c' || key === 'C') temizle();
+  if (key === 's' || key === 'S') pngKaydet();
 }
+
+
+// Paneldeki düğmeler
+window.addEventListener('DOMContentLoaded', () => {
+  const bagla = (id, fn) => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', fn);
+  };
+  bagla('b-ink', () => loadPreset('INK'));
+  bagla('b-dense', () => loadPreset('DENSE'));
+  bagla('b-wild', () => loadPreset('WILD'));
+  bagla('b-seed', yeniTohum);
+  bagla('b-clear', temizle);
+  bagla('b-png', pngKaydet);
+});
