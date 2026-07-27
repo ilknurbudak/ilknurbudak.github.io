@@ -157,16 +157,39 @@ select { border-radius: 0; appearance: none; cursor: pointer; }
 #saveseq, #saveprores, #savemp4 { display: none; }
 
 
-/* Telefon: tuval baskın kalsın, panel alta insin. */
-@media (max-width: 720px) {
-  body { grid-template-rows: 40px 1fr auto; }
-  main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+/* Telefon ve tablet: sayfa akar, tuval üstte yapışık kalır. */
+@media (max-width: 900px) {
+  html, body { height: auto; min-height: 100svh; overflow-y: auto; overflow-x: hidden; }
+  body { display: block; }
+
+  .bar {
+    position: sticky; top: 0; z-index: 3;
+    background: var(--bg);
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 10px;
+  }
+
+  main { display: block; }
+
+  .stage {
+    position: sticky;
+    top: 44px;
+    z-index: 2;
+    height: 56svh;
+  }
+
   .panel {
     border-left: 0;
     border-top: var(--line);
-    max-height: 30dvh;
-    -webkit-overflow-scrolling: touch;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
-  .bar { gap: 6px; overflow-x: auto; }
-  .transport { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+
+  .transport {
+    position: sticky; bottom: 0; z-index: 3;
+    background: var(--bg);
+    flex-wrap: wrap; gap: 8px; padding: 8px 10px;
+  }
 }

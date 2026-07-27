@@ -227,7 +227,7 @@ body{
    altında sahne. İşin kendi kontrol paneli sahnenin altında kalır. */
 
 @media (max-width:900px){
-  html,body{ height:100dvh; }
+  html,body{ height:100svh; }
 
   body{ flex-direction:column; }
 
