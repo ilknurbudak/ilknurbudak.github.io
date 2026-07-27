@@ -1,65 +1,52 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>x&gt;</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ilknur budak</title>
+<link rel="stylesheet" href="style.css?v=1785165724">
 </head>
 <body>
-    <!-- Sol üst: İmza/Logo -->
-    <div class="signature" tabindex="0" title="Kişisel sayfa">
-        <!-- SVG veya geçici imza -->
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 10 L18 38 M18 10 L10 38 M24 10 L38 24 L24 38" stroke="#222" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-    </div>
 
-    <!-- Sol alt: Navigasyon (project isimleri ve slider) -->
-    <nav class="side-nav">
-        <ul>
-            <li class="nav-item"><span>project 1</span></li>
-            <li class="nav-item active"><span>project 2</span></li>
-            <li class="nav-item"><span>project 3</span></li>
-            <li class="nav-item"><span>project 4</span></li>
-        </ul>
-        <div class="nav-slider">
-            <span class="dot"></span>
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-        </div>
-    </nav>
+<header class="korner">
+  <h1 class="imza">İLKNUR BUDAK</h1>
 
-    <!-- Sağ alt: Yardım butonu -->
-    <button class="help-btn" title="Açıklama" aria-label="Açıklama">
-        ?
-    </button>
+  <nav class="katalog">
+    <ol>
+      <li><button class="is" data-is="grid">Generative Grid</button></li>
+      <li><button class="is" data-is="echo-masks">Echo Masks</button></li>
+      <li><button class="is" data-is="kolaj">Collage Workbench</button></li>
+      <li><button class="is" data-is="canvas">CANVAS</button></li>
+      <li><button class="is" data-is="paintsound">paintsound</button></li>
+      <li><button class="is" data-is="ink">ink</button></li>
+      <li><button class="is" data-is="recursive">The Recursive Human</button></li>
+      <li><button class="is" data-is="nnc">no noob color</button></li>
+    </ol>
+  </nav>
 
-    <!-- Ana etkileşimli sanat alanı -->
-    <main class="art-area" tabindex="0">
-        <!-- Buraya sanat projesi entegre edilecek -->
-    </main>
+  <button class="ig" id="hakkinda" type="button">about</button>
 
-    <!-- Kişisel sayfa modalı (gizli) -->
-    <div class="modal" id="personal-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-content">
-            <button class="close-modal" aria-label="Kapat">&times;</button>
-            <h2>Kişisel Sayfa</h2>
-            <p>Burada kendini tanıtan bir içerik olacak.</p>
-        </div>
-    </div>
+  <div class="iletisim">
+    <a href="mailto:illlknurbudak@icloud.com">illlknurbudak@icloud.com</a>
+    <a href="mailto:illlknurbudak@gmail.com">illlknurbudak@gmail.com</a>
+  </div>
 
-    <!-- Yardım modalı (gizli) -->
-    <div class="modal" id="help-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-content">
-            <button class="close-modal" aria-label="Kapat">&times;</button>
-            <h2>Yardım & Açıklama</h2>
-            <p>Burada site ve sanat deneyimi hakkında açıklamalar olacak.</p>
-        </div>
-    </div>
+  <a class="ig" href="https://www.instagram.com/nonubi/" target="_blank" rel="noopener noreferrer">instagram</a>
+</header>
 
-    <script src="script.js"></script>
+<main class="sahne">
+  <iframe id="sahne-cerceve" title="" allow="autoplay; microphone; camera; xr-spatial-tracking"></iframe>
+  <button class="yardim" aria-label="Info">?</button>
+</main>
+
+<div class="perde" id="perde" aria-hidden="true">
+  <div class="perde-ic">
+    <button class="kapat" aria-label="Kapat">&times;</button>
+    <p class="perde-baslik"></p>
+    <p class="perde-metin"></p>
+  </div>
+</div>
+
+<script src="script.js?v=1785165724"></script>
 </body>
 </html>

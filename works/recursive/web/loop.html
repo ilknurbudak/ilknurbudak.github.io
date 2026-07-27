@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Loop — The Recursive Human</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<main>
+  <div class="kicker">The Algorithmic Edit</div>
+  <h1>The Loop</h1>
+  <p class="lead">All four stages, end to end, forever. Your face enters at stage one
+    and leaves through the eyes at stage four, then begins again.</p>
+  <div class="canvas-wrap full" id="wrap">
+    <canvas class="stage" id="c"></canvas>
+    <div class="overlay" id="ov">
+      <button class="act" id="enter">enter</button>
+      <small class="note">uses your camera · nothing leaves this device</small>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="act" id="rec" style="display:none">REC</button>
+    <small class="note">record the full loop, or a single passage, as a video layer</small>
+  </div>
+</main>
+<script type="module">
+  import { mountNav } from "./lib/nav.js";
+  import { boot } from "./lib/engine.js";
+  mountNav("loop.html");
+  const engine = await boot({
+    canvas: document.getElementById("c"),
+    mode: "loop", camera: true, audio: true,
+  });
+  document.getElementById("enter").addEventListener("click", async () => {
+    document.getElementById("ov").remove();
+    const api = await engine.start();
+    const rec = document.getElementById("rec");
+    rec.style.display = "inline-block";
+    rec.addEventListener("click", () => {
+      const on = api.recorder.toggle("recursive_human_loop");
+      rec.classList.toggle("on", on); rec.textContent = on ? "STOP" : "REC";
+    });
+  });
+</script>
+</body>
+</html>

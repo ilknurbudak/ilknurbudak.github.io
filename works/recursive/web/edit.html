@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Edit — The Recursive Human</title>
+<link rel="stylesheet" href="app.css" />
+<style>
+  .editrow { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+  .editrow label { font-size: 12px; color: var(--dim); letter-spacing: .08em; display: flex; gap: 8px; align-items: center; }
+  input[type=range] { width: 140px; }
+  select, input[type=file] { background: #0d0d0d; color: var(--fg); border: 1px solid var(--line); padding: 6px; font: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">The Experimental Edit</div>
+  <h1>The Edit</h1>
+  <p class="lead">Record layers from the loop or the stage pages, load them here, and
+    recombine them by sabotage — feedback trails, blend modes, and datamosh-style slice
+    displacement. This is the destructive edit: the order is made by breaking it.</p>
+
+  <div class="editrow">
+    <input type="file" id="files" accept="video/*" multiple />
+    <button class="act" id="play">play</button>
+    <button class="act" id="rec">REC</button>
+  </div>
+  <div class="editrow">
+    <label>blend
+      <select id="blend">
+        <option value="screen">screen</option>
+        <option value="lighten">lighten</option>
+        <option value="difference">difference</option>
+        <option value="overlay">overlay</option>
+        <option value="source-over">stack</option>
+      </select></label>
+    <label>feedback <input type="range" id="feedback" min="0" max="0.95" step="0.01" value="0.3" /></label>
+    <label>sabotage <input type="range" id="sabotage" min="0" max="1" step="0.01" value="0.35" /></label>
+    <label>channel shift <input type="range" id="chan" min="0" max="30" step="1" value="6" /></label>
+  </div>
+
+  <div class="canvas-wrap full"><canvas class="stage" id="c"></canvas></div>
+  <p><small class="note" id="status">load one or more recorded layers to begin.</small></p>
+</main>
+<script type="module">
+  import { mountNav } from "./lib/nav.js";
+  mountNav("edit.html");
+
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const acc = document.createElement("canvas");
+  const ax = acc.getContext("2d", { willReadFrequently: true });
+  let W = 960, H = 720;
+  function size() { W = canvas.clientWidth; H = canvas.clientHeight; canvas.width = acc.width = W; canvas.height = acc.height = H; }
+  window.addEventListener("resize", size); size();
+
+  const videos = [];
+  let seed = 1; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  document.getElementById("files").addEventListener("change", e => {
+    for (const f of e.target.files) {
+      const v = document.createElement("video");
+      v.src = URL.createObjectURL(f); v.loop = true; v.muted = true; v.playsInline = true;
+      videos.push(v);
+    }
+    document.getElementById("status").textContent = `${videos.length} layer(s) loaded — press play.`;
+  });
+
+  function sabotage(amount, chan) {
+    if (amount <= 0) return;
+    const bands = Math.floor(amount * 18);
+    for (let i = 0; i < bands; i++) {
+      const y = Math.floor(rnd() * H), h = 4 + Math.floor(rnd() * 40 * amount);
+      const dx = Math.floor((rnd() - 0.5) * 80 * amount);
+      ctx.drawImage(canvas, 0, y, W, h, dx, y, W, h);
+    }
+    if (chan > 0) {
+      const img = ctx.getImageData(0, 0, W, H), d = img.data, s = chan * 4;
+      for (let p = 0; p < d.length - s; p += 4) d[p] = d[p + s]; // shift red channel
+      ctx.putImageData(img, 0, 0);
+    }
+  }
+
+  let running = false;
+  function frame() {
+    if (!running) return;
+    const fb = +document.getElementById("feedback").value;
+    const blend = document.getElementById("blend").value;
+    const sab = +document.getElementById("sabotage").value;
+    const chan = +document.getElementById("chan").value;
+
+    // feedback: keep a faded copy of the last frame (the trail)
+    ax.globalAlpha = 1; ax.globalCompositeOperation = "source-over";
+    ax.fillStyle = "#000"; ax.fillRect(0, 0, W, H);
+    ax.globalAlpha = fb; ax.drawImage(canvas, 0, 0, W, H);
+
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(acc, 0, 0);                 // previous frame, faded
+    ctx.globalCompositeOperation = blend;
+    for (const v of videos) if (v.readyState >= 2) ctx.drawImage(v, 0, 0, W, H);
+    ctx.globalCompositeOperation = "source-over";
+    sabotage(sab, chan);
+    requestAnimationFrame(frame);
+  }
+
+  document.getElementById("play").addEventListener("click", () => {
+    if (!videos.length) return;
+    running = !running;
+    document.getElementById("play").textContent = running ? "pause" : "play";
+    if (running) { videos.forEach(v => v.play()); requestAnimationFrame(frame); }
+    else videos.forEach(v => v.pause());
+  });
+
+  // record the recombined output
+  let rec = null, chunks = [];
+  document.getElementById("rec").addEventListener("click", () => {
+    const btn = document.getElementById("rec");
+    if (rec && rec.state === "recording") { rec.stop(); btn.classList.remove("on"); btn.textContent = "REC"; return; }
+    const mime = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
+    rec = new MediaRecorder(canvas.captureStream(30), { mimeType: mime, videoBitsPerSecond: 1e7 });
+    chunks = []; rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(chunks, { type: mime }));
+      a.download = "recursive_human_edit." + (mime.includes("mp4") ? "mp4" : "webm"); a.click();
+    };
+    rec.start(); btn.classList.add("on"); btn.textContent = "STOP";
+  });
+</script>
+</body>
+</html>

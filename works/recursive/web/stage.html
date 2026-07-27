@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stage — The Recursive Human</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<main>
+  <div class="kicker" id="kicker">Stage</div>
+  <h1 id="title">—</h1>
+  <div class="stage-meta">
+    <div><strong>Role</strong><br><span id="role" class="lead"></span></div>
+    <div><strong>Reading</strong><br><span id="note" class="lead"></span></div>
+  </div>
+  <div class="canvas-wrap" id="wrap">
+    <canvas class="stage" id="c"></canvas>
+    <div class="overlay" id="ov">
+      <button class="act" id="enter">enter</button>
+      <small class="note">uses your camera · nothing leaves this device</small>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="act" id="rec" style="display:none">REC</button>
+    <small class="note" id="recnote"></small>
+  </div>
+  <div class="pager">
+    <a id="prev">&larr; prev</a>
+    <a href="loop.html">see all four in the loop &rarr;</a>
+    <a id="next">next &rarr;</a>
+  </div>
+</main>
+<script type="module">
+  import { STAGES, byN } from "./lib/stages.js";
+  import { mountNav } from "./lib/nav.js";
+  import { boot } from "./lib/engine.js";
+
+  const n = new URLSearchParams(location.search).get("s") || "01";
+  const s = byN(n) || STAGES[0];
+  mountNav(`stage.html?s=${s.n}`);
+
+  document.getElementById("kicker").textContent = `Stage ${s.n}`;
+  document.getElementById("title").textContent = s.title;
+  document.getElementById("role").textContent = s.role;
+  document.getElementById("note").textContent = s.note;
+
+  const idx = STAGES.indexOf(s);
+  const prev = STAGES[(idx + STAGES.length - 1) % STAGES.length];
+  const next = STAGES[(idx + 1) % STAGES.length];
+  document.getElementById("prev").href = `stage.html?s=${prev.n}`;
+  document.getElementById("next").href = `stage.html?s=${next.n}`;
+
+  const engine = await boot({
+    canvas: document.getElementById("c"),
+    mode: "single", stageN: s.n, camera: true, audio: true,
+  });
+  document.getElementById("enter").addEventListener("click", async () => {
+    document.getElementById("ov").remove();
+    const api = await engine.start();
+    const rec = document.getElementById("rec");
+    rec.style.display = "inline-block";
+    document.getElementById("recnote").textContent = "export this stage as a video layer";
+    rec.addEventListener("click", () => {
+      const on = api.recorder.toggle(`layer_${s.id}`);
+      rec.classList.toggle("on", on); rec.textContent = on ? "STOP" : "REC";
+    });
+  });
+</script>
+</body>
+</html>

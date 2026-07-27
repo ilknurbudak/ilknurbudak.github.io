@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Collage Workbench</title>
+<style>
+  :root{
+    --line:#d8d8d8; --ink:#111; --sub:#6b6b6b; --bg:#fff; --panel:#fafafa;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font:400 13px/1.45 Helvetica Neue, Helvetica, Arial, sans-serif;
+    color:var(--ink); background:var(--bg);
+    display:flex; overflow:hidden;
+  }
+  /* Kontrol arayüzü sağda — sitedeki diğer işlerle aynı kalıp. */
+  aside{
+    order:2;
+    width:clamp(150px, 16vw, 200px); flex:0 0 auto; height:100%; overflow-y:auto;
+    border-left:1px solid var(--line); background:var(--panel);
+    padding:18px 16px 60px;
+  }
+  main{
+    order:1;
+    position:relative;
+    flex:1 1 auto; min-width:0; min-height:0; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; overflow:hidden;
+    /* Yeşil zemin, beyaz ızgara: ince kareler, her beşincide belirgin çizgi. */
+    background-color:#0b6e46;
+    background-image:
+      repeating-linear-gradient(to right,  rgba(255,255,255,.55) 0 1px, transparent 1px 120px),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 1px, transparent 1px 120px),
+      repeating-linear-gradient(to right,  rgba(255,255,255,.22) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.22) 0 1px, transparent 1px 24px);
+  }
+  canvas{
+    max-width:100%; max-height:100%;
+    box-shadow:0 1px 24px rgba(0,0,0,.18); background:#fff;
+  }
+
+  /* Künye: difference ile zemine göre kendini tersler. */
+  .kunye{
+    position:absolute; left:14px; bottom:12px; z-index:5;
+    display:flex; flex-wrap:wrap; gap:0 10px;
+    max-width:calc(100% - 28px);
+    font-size:10px; line-height:1.4; letter-spacing:.02em;
+    color:#fff; mix-blend-mode:difference; pointer-events:none;
+  }
+  .kunye .ad{ font-weight:500; }
+
+  @media (max-width:640px), (max-height:420px){
+    body{ flex-direction:column; }
+    aside{
+      width:100%; height:auto; max-height:38%;
+      border-left:0; border-top:1px solid var(--line);
+    }
+  }
+  h1{font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; margin:0 0 18px}
+  .sec{border-top:1px solid var(--line); padding:14px 0 4px}
+  .sec:first-of-type{border-top:none}
+  .lbl{display:flex; justify-content:space-between; align-items:baseline; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); margin:0 0 6px}
+  .lbl b{font-weight:400; color:var(--ink); font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%; accent-color:#111; margin:0 0 12px}
+  select,input[type=text],input[type=number]{
+    width:100%; padding:6px 8px; border:1px solid var(--line); background:#fff;
+    font:inherit; color:inherit; border-radius:0; margin-bottom:10px;
+  }
+  button{
+    width:100%; padding:9px 10px; border:1px solid var(--ink); background:var(--ink); color:#fff;
+    font:inherit; letter-spacing:.06em; cursor:pointer; margin-bottom:8px; border-radius:0;
+  }
+  button.ghost{background:#fff; color:var(--ink)}
+  button:hover{opacity:.82}
+  .row{display:flex; gap:8px}
+  .row>*{margin-bottom:8px}
+  .swatches{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px}
+  .sw{position:relative; width:38px; height:38px; border:1px solid var(--line); cursor:pointer}
+  .sw input{position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; border:none; padding:0; margin:0}
+  .sw .x{position:absolute; top:-6px; right:-6px; width:14px; height:14px; line-height:12px; text-align:center;
+    background:#fff; border:1px solid var(--line); font-size:10px; color:var(--sub)}
+  .slots{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-bottom:10px}
+  .slot{aspect-ratio:1; border:1px dashed var(--line); background:#fff center/cover no-repeat; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; color:#c3c3c3; font-size:16px}
+  .slot.on{border-style:solid}
+  .drop{outline:2px solid var(--ink); outline-offset:2px}
+  .note{font-size:11px; color:var(--sub); line-height:1.5}
+  .chk{display:flex; align-items:center; gap:7px; margin-bottom:9px; font-size:12px; cursor:pointer}
+  .chk input{accent-color:#111}
+  .seedrow{display:flex; gap:6px; align-items:center}
+  .seedrow input{margin-bottom:0; font-variant-numeric:tabular-nums}
+  .seedrow button{width:auto; padding:7px 11px; margin:0}
+
+  /* modal */
+  .veil{position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:50}
+  .veil.on{display:flex}
+  .modal{background:#fff; width:760px; max-width:94vw; max-height:92vh; overflow-y:auto; padding:24px 26px 26px;
+    border:1px solid var(--line)}
+  .modal h2{font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; margin:0 0 4px}
+  .modal .sub{font-size:11px; color:var(--sub); margin:0 0 18px}
+  .mgrid{display:flex; gap:22px; align-items:flex-start}
+  .mcol{flex:1; min-width:0}
+  .opts{display:grid; gap:8px; margin-bottom:16px}
+  .opt{border:1px solid var(--line); padding:10px 12px; cursor:pointer; background:#fff}
+  .opt.sel{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink)}
+  .opt b{display:block; font-weight:600; font-size:12px; margin-bottom:3px}
+  .opt span{font-size:11px; color:var(--sub); line-height:1.45}
+  .seg{display:flex; gap:0; margin-bottom:14px}
+  .seg button{flex:1; margin:0; border-right:none; background:#fff; color:var(--ink)}
+  .seg button:last-child{border-right:1px solid var(--ink)}
+  .seg button.sel{background:var(--ink); color:#fff}
+  .prev{width:100%; height:470px; background:#e9e9e9; display:flex; align-items:center; justify-content:center;
+    margin-bottom:12px; overflow:hidden}
+  .prev canvas,.prev video{max-width:100%; max-height:100%; display:block}
+  .bar{height:3px; background:var(--line); margin-bottom:12px}
+  .bar i{display:block; height:100%; background:var(--ink); width:0}
+  #busy{display:none; position:absolute; left:16px; top:16px; background:#111; color:#fff;
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:4px 9px; z-index:40}
+  .stat{font-size:11px; color:var(--sub); margin-bottom:12px; min-height:15px}
+
+  .head{display:flex; justify-content:space-between; align-items:center; margin:0 0 10px}
+  .head .t{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub)}
+  .acts{display:flex; align-items:center; gap:7px}
+  .acts label{display:flex; align-items:center; gap:4px; font-size:10px; color:var(--sub); cursor:pointer}
+  .acts input{accent-color:#111; margin:0}
+  button.mini{width:auto; margin:0; padding:2px 8px; font-size:10px; letter-spacing:.08em;
+    background:#fff; color:var(--ink); border:1px solid var(--line)}
+  button.mini:hover{border-color:var(--ink)}
+</style>
+</head>
+<body>
+
+<aside id="panel">
+  <h1>Collage Workbench</h1>
+
+  <div class="sec">
+    <div class="lbl">Source images <b id="imgCount">0/5</b></div>
+    <div class="slots" id="slots"></div>
+    <div class="note">Drag and drop or click. Leave empty and it builds procedural gesture layers.</div>
+    <button class="ghost" id="clearImgs" style="margin-top:10px">Clear images</button>
+  </div>
+
+  <div class="sec">
+    <div class="head"><span class="t">Palette</span><span class="acts"><label><input type="checkbox" class="lk" data-s="palette"> locked</label><button class="mini" data-rnd="palette">random</button></span></div>
+    <div class="swatches" id="swatches"></div>
+    <div class="row">
+      <button class="ghost" id="addColor">Add colour</button>
+    </div>
+    <div class="lbl">Share of black <b id="vInkRatio"></b></div>
+    <input type="range" id="inkRatio" min="0" max="100" value="62">
+    <div class="lbl">Colour drift <b id="vShift"></b></div>
+    <input type="range" id="shift" min="0" max="100" value="35">
+  </div>
+
+  <div class="sec">
+    <div class="head"><span class="t">Page</span></div>
+    <div class="lbl">Ratio</div>
+    <select id="ratio">
+      <option value="a4p">A4 portrait — 1:1.41</option>
+      <option value="a4l">A4 landscape — 1.41:1</option>
+      <option value="sq">Square — 1:1</option>
+      <option value="h169">16:9 portrait — 9:16</option>
+      <option value="w169">16:9 landscape — 16:9</option>
+      <option value="p45">4:5 portrait</option>
+      <option value="l54">5:4 landscape</option>
+    </select>
+    <div class="lbl">Collage layout</div>
+    <select id="layout">
+      <option value="single">Single page</option>
+      <option value="duo">Pair</option>
+      <option value="quad">Quad — 2×2</option>
+      <option value="g45">4×5 — 20 pieces</option>
+      <option value="serie">Series — random grid</option>
+    </select>
+    <div class="lbl">Layout direction</div>
+    <select id="layoutDir">
+      <option value="dikey">Portrait</option>
+      <option value="yatay">Landscape</option>
+    </select>
+    <div class="lbl">Piece ratio</div>
+    <select id="cellRatio">
+      <option value="auto">Fit to area</option>
+      <option value="sq">Square</option>
+      <option value="a4p">A4 portrait</option>
+      <option value="a4l">A4 landscape</option>
+      <option value="h169">16:9 portrait</option>
+      <option value="w169">16:9 landscape</option>
+    </select>
+    <div class="note" id="pageNote"></div>
+  </div>
+
+  <div class="sec">
+    <div class="head"><span class="t">Composition</span><span class="acts"><label><input type="checkbox" class="lk" data-s="comp"> locked</label><button class="mini" data-rnd="comp">random</button></span></div>
+    <select id="mode">
+      <option value="panel">Single panel — gestural abstract print</option>
+      <option value="block">Colour block — minimalist</option>
+      <option value="tachisme">Tachisme — lyrical stain</option>
+      <option value="strata">Strata / industrial</option>
+    </select>
+    <div class="lbl">Layer count <b id="vLayers"></b></div>
+    <input type="range" id="layers" min="2" max="9" value="5">
+    <div class="lbl">Organicness <b id="vOrganic"></b></div>
+    <input type="range" id="organic" min="0" max="100" value="80">
+    <div class="lbl">Ink density <b id="vInk"></b></div>
+    <input type="range" id="ink" min="5" max="95" value="48">
+    <div class="lbl">Coverage <b id="vFill"></b></div>
+    <input type="range" id="fill" min="10" max="100" value="70">
+    <div class="lbl">Form frequency <b id="vForms"></b></div>
+    <input type="range" id="formsPer" min="1" max="8" value="3">
+    <div class="lbl">Size hierarchy <b id="vHier"></b></div>
+    <input type="range" id="hier" min="0" max="100" value="65">
+    <div class="lbl">Edge waver <b id="vTear"></b></div>
+    <input type="range" id="tear" min="0" max="100" value="18">
+    <label class="chk"><input type="checkbox" id="tape"> Tape (collage)</label>
+    <label class="chk"><input type="checkbox" id="edge" checked> Piece edge (collage)</label>
+  </div>
+
+  <div class="sec">
+    <div class="head"><span class="t">Gradient</span><span class="acts"><label><input type="checkbox" class="lk" data-s="grad"> locked</label><button class="mini" data-rnd="grad">random</button></span></div>
+    <div class="lbl">Level <b id="vGrad"></b></div>
+    <input type="range" id="grad" min="0" max="100" value="45">
+    <div class="lbl">Steps (banding) <b id="vSteps"></b></div>
+    <input type="range" id="steps" min="1" max="24" value="1">
+    <div class="lbl">Transition softness <b id="vSoft"></b></div>
+    <input type="range" id="soft" min="0" max="100" value="22">
+    <select id="gradDir">
+      <option value="mixed">Direction: mixed</option>
+      <option value="v">Direction: vertical</option>
+      <option value="h">Direction: horizontal</option>
+      <option value="d">Direction: diagonal</option>
+      <option value="radial">Direction: from centre</option>
+    </select>
+  </div>
+
+
+
+
+  <div class="sec">
+    <div class="head"><span class="t">Noise</span><span class="acts"><label><input type="checkbox" class="lk" data-s="noise"> locked</label><button class="mini" data-rnd="noise">random</button></span></div>
+    <div class="lbl">Grain <b id="vGrain"></b></div>
+    <input type="range" id="grain" min="0" max="100" value="14">
+    <div class="lbl">Grain fineness <b id="vGrainSize"></b></div>
+    <input type="range" id="grainSize" min="0" max="100" value="88">
+    <div class="lbl">Paper texture <b id="vFiber"></b></div>
+    <input type="range" id="fiber" min="0" max="100" value="18">
+    <div class="lbl">Print wear <b id="vMottle"></b></div>
+    <input type="range" id="mottle" min="0" max="100" value="40">
+    <div class="lbl">Wear fineness <b id="vMottleSize"></b></div>
+    <input type="range" id="mottleSize" min="0" max="100" value="70">
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Seed</div>
+    <div class="seedrow">
+      <input type="text" id="seed" value="0001">
+      <button class="ghost" id="reseed">New</button>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="auto"> Auto flow (4s)</label>
+    <label class="chk"><input type="checkbox" id="genRnd"> Generate also changes settings</label>
+    <button class="ghost" id="rndAll" style="margin-top:4px">Randomise unlocked sections</button>
+  </div>
+
+  <div class="sec">
+    <button id="gen">Generate</button>
+    <button class="ghost" id="save">Download PNG</button>
+    <button class="ghost" id="save10">Download 10 variations</button>
+    <button class="ghost" id="mp4open">Motion — video</button>
+    <button class="ghost" id="reset">Reset settings</button>
+  </div>
+</aside>
+
+<main>
+  <canvas id="c"></canvas>
+  <div id="busy">generating</div>
+  <div class="kunye" id="kunye">
+    <span class="ad">İLKNUR BUDAK</span>
+    <span class="eser">Collage Workbench</span>
+    <span class="model"></span>
+    <span class="seed"></span>
+  </div>
+</main>
+
+<div class="veil" id="veil">
+  <div class="modal">
+    <h2>Motion — camera</h2>
+    <p class="sub">Each piece prints its composition larger than the frame: a piece map. Every piece has its own camera, and each layer follows it at its own depth — back slow, front fast. The seed drives only the motion; it never touches the composition.</p>
+    <div class="mgrid">
+      <div class="mcol">
+        <div class="opts" id="animOpts">
+          <div class="opt sel" data-v="path"><b>Path</b><span>The camera keeps moving along a closed path across the map. The state of being on the way.</span></div>
+          <div class="opt" data-v="fall"><b>Fall</b><span>Vertically dominant. The camera accelerates downward, hits bottom, rebounds, falls again.</span></div>
+          <div class="opt" data-v="jump"><b>Jump</b><span>Hard cuts dominate. The camera leaps between regions, drifting slightly between leaps.</span></div>
+          <div class="opt" data-v="split"><b>Split</b><span>The frame splits in two or four; each part shows a different region of the map.</span></div>
+          <div class="opt" data-v="print"><b>Print</b><span>Layers arrive one by one in each piece. Each new layer flows into place.</span></div>
+        </div>
+        <div class="lbl">Map scale <b id="vCamMap"></b></div>
+        <input type="range" id="camMap" min="100" max="400" step="10" value="240">
+        <div class="lbl">Range <b id="vCamTravel"></b></div>
+        <input type="range" id="camTravel" min="0" max="100" value="70">
+        <div class="lbl">Layer separation <b id="vCamPara"></b></div>
+        <input type="range" id="camPara" min="0" max="100" value="55">
+        <div class="lbl">Piece spread <b id="vCamSpread"></b></div>
+        <input type="range" id="camSpread" min="0" max="100" value="60">
+        <div class="lbl">Zoom <b id="vCamZoom"></b></div>
+        <input type="range" id="camZoom" min="0" max="100" value="25">
+        <div class="lbl">Falling <b id="vCamFall"></b></div>
+        <input type="range" id="camFall" min="0" max="100" value="0">
+        <div class="lbl">Jumping <b id="vCamJump"></b></div>
+        <input type="range" id="camJump" min="0" max="100" value="20">
+        <div class="lbl">Splitting <b id="vCamSplit"></b></div>
+        <input type="range" id="camSplit" min="0" max="100" value="0">
+        <div class="lbl">Flow <b id="vCamFlow"></b></div>
+        <input type="range" id="camFlow" min="0" max="100" value="0">
+        <div class="lbl">Duration</div>
+        <div class="seg" id="animDurSeg">
+          <button data-v="4000">4s</button>
+          <button class="sel" data-v="6000">6s</button>
+          <button data-v="8000">8s</button>
+          <button data-v="12000">12s</button>
+        </div>
+        <div class="lbl">Resolution</div>
+        <div class="seg" id="animRes">
+          <button data-v="720">720</button>
+          <button class="sel" data-v="1080">1080</button>
+        </div>
+        <div class="lbl">Camera seed</div>
+        <div class="seedrow">
+          <input type="text" id="animSeed" value="K001">
+          <button class="ghost" id="animReseed">New</button>
+        </div>
+      </div>
+      <div class="mcol">
+        <div class="prev" id="animPrev"></div>
+        <div class="bar"><i id="animBar"></i></div>
+        <div class="stat" id="animStat"></div>
+        <button id="animRun">Record</button>
+        <button class="ghost" id="animDl" style="display:none">Download</button>
+        <button class="ghost" id="animClose">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- rastgelelik ---------- */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=(r,a,b)=>a+(b-a)*r();
+const RI=(r,a,b)=>Math.floor(R(r,a,b+1));
+const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
+const chance=(r,p)=>r()<p;
+
+/* ---------- düşük frekanslı gürültü ---------- */
+function valueNoise(r,gw,gh){
+  const g=new Float32Array(gw*gh);
+  for(let i=0;i<g.length;i++)g[i]=r();
+  return (x,y)=>{ // x,y serbest: 0..1 dışına taşarsa sarılır
+    x=x-Math.floor(x); y=y-Math.floor(y);
+    const fx=x*(gw-1), fy=y*(gh-1);
+    const x0=Math.max(0,Math.min(gw-1,Math.floor(fx))), y0=Math.max(0,Math.min(gh-1,Math.floor(fy)));
+    const x1=Math.min(x0+1,gw-1), y1=Math.min(y0+1,gh-1);
+    const tx=fx-x0, ty=fy-y0;
+    const sx=tx*tx*(3-2*tx), sy=ty*ty*(3-2*ty);
+    const a=g[y0*gw+x0], b=g[y0*gw+x1], c=g[y1*gw+x0], d=g[y1*gw+x1];
+    return (a+(b-a)*sx)*(1-sy)+(c+(d-c)*sx)*sy;
+  };
+}
+
+/* ---------- şekil yolları ---------- */
+function tornRect(ctx,x,y,w,h,r,rough){
+  if(rough<0.6){ ctx.beginPath(); ctx.rect(x,y,w,h); ctx.closePath(); return; }
+  const pts=[];
+  const add=(px,py,corner)=>{pts.push([px,py]); if(corner)pts.push([px,py]);};
+  const seg=(len)=>Math.max(2,Math.round(len/150));
+  const nx=seg(w), ny=seg(h);
+  const d=()=>(r()-0.5)*2*rough;
+  add(x,y,1);
+  for(let i=1;i<nx;i++) add(x+w*i/nx, y+d());
+  add(x+w,y,1);
+  for(let i=1;i<ny;i++) add(x+w+d(), y+h*i/ny);
+  add(x+w,y+h,1);
+  for(let i=nx-1;i>=1;i--) add(x+w*i/nx, y+h+d());
+  add(x,y+h,1);
+  for(let i=ny-1;i>=1;i--) add(x+d(), y+h*i/ny);
+  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  const st=mid(pts[pts.length-1],pts[0]);
+  ctx.beginPath();
+  ctx.moveTo(st[0],st[1]);
+  for(let i=0;i<pts.length;i++){
+    const c=pts[i], n=pts[(i+1)%pts.length], m=mid(c,n);
+    ctx.quadraticCurveTo(c[0],c[1],m[0],m[1]);
+  }
+  ctx.closePath();
+}
+function leafPath(ctx,cx,cy,len,wid,ang,r,curve){
+  ctx.save();
+  ctx.translate(cx,cy); ctx.rotate(ang);
+  ctx.beginPath();
+  ctx.moveTo(-len/2,0);
+  ctx.bezierCurveTo(-len*0.28,-wid*curve, len*0.22,-wid, len/2, R(r,-wid*0.25,wid*0.25));
+  ctx.bezierCurveTo(len*0.22, wid*R(r,0.5,0.95), -len*0.28, wid*curve*R(r,0.6,1.0), -len/2, 0);
+  ctx.closePath();
+  ctx.restore();
+}
+function sweepPath(ctx,W,H,r,widthScale){
+  const n=RI(r,3,5);
+  const cx=[],cy=[];
+  let px=R(r,-0.15,1.15)*W, py=R(r,-0.15,1.15)*H;
+  const ang=R(r,0,Math.PI*2), step=R(r,0.25,0.6);
+  for(let i=0;i<n;i++){
+    cx.push(px); cy.push(py);
+    const a=ang+R(r,-0.9,0.9);
+    px+=Math.cos(a)*W*step; py+=Math.sin(a)*H*step;
+  }
+  const samples=64, L=[],Rt=[];
+  const w0=W*widthScale*R(r,0.5,1.5);
+  for(let i=0;i<=samples;i++){
+    const t=i/samples;
+    const p=catmull(cx,cy,t), q=catmull(cx,cy,Math.min(1,t+0.01));
+    let dx=q[0]-p[0], dy=q[1]-p[1];
+    const m=Math.hypot(dx,dy)||1; dx/=m; dy/=m;
+    const taper=Math.pow(Math.sin(Math.PI*t),0.45);
+    const w=w0*taper*(0.6+0.4*Math.sin(t*9+r()*0.01));
+    L.push([p[0]-dy*w/2,p[1]+dx*w/2]);
+    Rt.push([p[0]+dy*w/2,p[1]-dx*w/2]);
+  }
+  ctx.beginPath();
+  ctx.moveTo(L[0][0],L[0][1]);
+  L.forEach(p=>ctx.lineTo(p[0],p[1]));
+  for(let i=Rt.length-1;i>=0;i--)ctx.lineTo(Rt[i][0],Rt[i][1]);
+  ctx.closePath();
+}
+function catmull(xs,ys,t){
+  const n=xs.length-1, ft=t*n, i=Math.min(n-1,Math.floor(ft)), lt=ft-i;
+  const g=(a,i)=>a[Math.max(0,Math.min(a.length-1,i))];
+  const h=(p0,p1,p2,p3)=>0.5*((2*p1)+(-p0+p2)*lt+(2*p0-5*p1+4*p2-p3)*lt*lt+(-p0+3*p1-3*p2+p3)*lt*lt*lt);
+  return [h(g(xs,i-1),g(xs,i),g(xs,i+1),g(xs,i+2)), h(g(ys,i-1),g(ys,i),g(ys,i+1),g(ys,i+2))];
+}
+function blobPath(ctx,cx,cy,rad,r,irregular){
+  const n=RI(r,6,11), pts=[];
+  const sq=R(r,0.65,1.45), tilt=R(r,0,Math.PI);
+  const lobe=RI(r,2,4), lp=R(r,0,Math.PI*2), la=irregular*R(r,0.6,1.4);
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2;
+    let rr=rad*(1+Math.sin(a*lobe+lp)*la)*(1+(r()-0.5)*irregular*0.5);
+    if(chance(r,0.08))rr*=R(r,1.15,1.5);
+    const x=Math.cos(a)*rr, y=Math.sin(a)*rr*sq;
+    pts.push([cx+x*Math.cos(tilt)-y*Math.sin(tilt), cy+x*Math.sin(tilt)+y*Math.cos(tilt)]);
+  }
+  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  ctx.beginPath();
+  const st=mid(pts[n-1],pts[0]);
+  ctx.moveTo(st[0],st[1]);
+  for(let i=0;i<n;i++){
+    const p=pts[i], q=pts[(i+1)%n], m=mid(p,q);
+    ctx.quadraticCurveTo(p[0],p[1],m[0],m[1]);
+  }
+  ctx.closePath();
+}
+
+/* ---------- prosedürel mürekkep (görsel yokken) ---------- */
+function proceduralInk(tc,W,H,r){
+  const g=tc.getContext('2d');
+  g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  g.fillStyle='#000';
+  const strokes=RI(r,3,9);
+  for(let i=0;i<strokes;i++){ sweepPath(g,W,H,r,R(r,0.03,0.30)); g.globalAlpha=R(r,0.5,1); g.fill(); }
+  g.globalAlpha=1;
+  const scr=RI(r,20,90);
+  g.strokeStyle='#000';
+  for(let i=0;i<scr;i++){
+    g.lineWidth=R(r,0.5,2.4)*(W/1600);
+    g.globalAlpha=R(r,0.15,0.7);
+    const x=R(r,0,W), y=R(r,0,H), a=R(r,0,Math.PI*2), l=R(r,0.05,0.5)*W;
+    g.beginPath(); g.moveTo(x,y);
+    g.quadraticCurveTo(x+Math.cos(a)*l*0.5+R(r,-40,40), y+Math.sin(a)*l*0.5+R(r,-40,40), x+Math.cos(a)*l, y+Math.sin(a)*l);
+    g.stroke();
+  }
+  g.globalAlpha=1;
+}
+
+/* ---------- görselden mürekkep katmanı ---------- */
+function inkFromSource(tc,W,H,r,img,P){
+  const g=tc.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);
+  g.clearRect(0,0,W,H);
+  g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  if(img){
+    const sw=img.width*R(r,0.18,0.75), sh=img.height*R(r,0.18,0.75);
+    const sx=R(r,0,img.width-sw), sy=R(r,0,img.height-sh);
+    g.save();
+    g.translate(W/2,H/2);
+    g.rotate(chance(r,0.45)?R(r,-Math.PI,Math.PI):R(r,-0.25,0.25));
+    if(chance(r,0.5))g.scale(-1,1);
+    const s=R(r,1.0,2.2);
+    g.drawImage(img,sx,sy,sw,sh,-W*s/2,-H*s/2,W*s,H*s);
+    g.restore();
+  } else {
+    proceduralInk(tc,W,H,r);
+  }
+  return g;
+}
+
+/* ---------- eşikleme + renklendirme + aşınma ---------- */
+function thresholdColorize(g,W,H,r,color,P){
+  const d=g.getImageData(0,0,W,H), a=d.data;
+  const n1=valueNoise(r,RI(r,4,10),RI(r,4,10));
+  const mres=Math.round(30+P.mottleSize*420);
+  const n2=valueNoise(r,mres,mres);
+  const base=P.inkLevel;
+  const spread=R(r,0.06,0.30);
+  const invert=chance(r,0.22);
+  const soft=1+P.soft*70;
+  const [cr,cg,cb]=color;
+  const mot=P.mottle;
+  const steps=P.steps;
+  const gAmt=P.grad;
+  let dir=P.gradDir;
+  if(dir==='mixed')dir=pick(r,['v','h','d','radial']);
+  const flip=chance(r,0.5)?1:-1, off=R(r,-0.25,0.25);
+  const ca=Math.cos(R(r,0,Math.PI*2)), sa=Math.sin(R(r,0,Math.PI*2));
+  const cxg=R(r,0.25,0.75), cyg=R(r,0.25,0.75);
+  const ramp=(x,y)=>{
+    let v;
+    if(dir==='v')v=y;
+    else if(dir==='h')v=x;
+    else if(dir==='d')v=(x*ca+y*sa+1)/2;
+    else v=1-Math.min(1,Math.hypot(x-cxg,y-cyg)*1.7);
+    v=v*flip+(flip<0?1:0)+off;
+    return v<0?0:v>1?1:v;
+  };
+  for(let y=0;y<H;y++){
+    const yy=y/H;
+    for(let x=0;x<W;x++){
+      const i=(y*W+x)*4;
+      const xx=x/W;
+      let lum=(a[i]*0.299+a[i+1]*0.587+a[i+2]*0.114)/255;
+      if(invert)lum=1-lum;
+      const t=base+(n1(xx,yy)-0.5)*2*spread;
+      let al=(t-lum)/(soft/255)+0.5;
+      al=al<0?0:al>1?1:al;
+      if(gAmt>0) al*= 1-gAmt*(1-ramp(xx,yy));
+      if(steps>=1) al=Math.round(al*steps)/steps;
+      if(mot>0){
+        const m=n1(xx*1.7+0.3,yy*1.7+0.11);
+        const f=n2(xx,yy);
+        al*= (1-mot*0.85*(1-m)) * (f<mot*0.11?R(r,0,0.45):1);
+        if(al<0)al=0;
+      }
+      a[i]=cr; a[i+1]=cg; a[i+2]=cb; a[i+3]=al*255;
+    }
+  }
+  g.putImageData(d,0,0);
+}
+
+/* ---------- renk yardımcıları ---------- */
+function hex2rgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function distort(rgb,r,amt){
+  if(amt<=0)return rgb;
+  let [R_,G_,B_]=rgb;
+  const k=amt*90;
+  const j=()=>Math.round((r()-0.5)*2*k);
+  const out=[R_+j(),G_+j(),B_+j()].map(v=>v<0?0:v>255?255:v);
+  if(chance(r,amt*0.5)){ // kanal takası
+    const i=RI(r,0,2), jx=RI(r,0,2); const t=out[i]; out[i]=out[jx]; out[jx]=t;
+  }
+  return out;
+}
+
+/* ---------- kompozisyon iskeleti ---------- */
+const THIRDS=[[0.34,0.33],[0.66,0.33],[0.34,0.67],[0.66,0.67],[0.5,0.42],[0.5,0.6]];
+
+function assignRoles(n,mr){
+  const roles=['dom'];
+  const mids=Math.max(1,Math.round((n-1)*0.45));
+  for(let i=1;i<n;i++) roles.push(i<=mids?'mid':'acc');
+  return roles;
+}
+function roleScale(role,hier,mr){
+  const base={dom:[0.62,1.18],mid:[0.30,0.60],acc:[0.09,0.26]}[role];
+  const flat=[0.30,0.70];
+  const lo=flat[0]+(base[0]-flat[0])*hier;
+  const hi=flat[1]+(base[1]-flat[1])*hier;
+  return R(mr,lo,hi);
+}
+function rolePos(role,W,H,mr){
+  if(role==='acc') return [R(mr,0.02,0.98)*W, R(mr,0.02,0.98)*H];
+  const p=pick(mr,THIRDS);
+  const j=role==='dom'?0.11:0.18;
+  return [(p[0]+R(mr,-j,j))*W, (p[1]+R(mr,-j,j))*H];
+}
+function drawShape(g,sh,W,H,mr,P,role,ctr){
+  const s=roleScale(role,P.hier,mr);
+  const M=Math.max(W,H);
+  let cx,cy;
+  if(ctr){
+    cx=(ctr[0]+R(mr,-0.11,0.11))*W;
+    cy=(ctr[1]+R(mr,-0.11,0.11))*H;
+  } else {
+    const pos=rolePos(role,W,H,mr);
+    cx=pos[0]; cy=pos[1];
+  }
+  if(sh==='blob'){
+    blobPath(g,cx,cy,s*M*0.46,mr,R(mr,0.12,0.42)); g.fill();
+  } else if(sh==='leaf'){
+    const len=s*M*1.35;
+    leafPath(g,cx,cy,len,len*R(mr,0.12,0.46),R(mr,0,Math.PI*2),mr,R(mr,0.6,1.35)); g.fill();
+  } else if(sh==='sweep'){
+    sweepPath(g,W,H,mr,s*0.5); g.fill();
+  } else if(sh==='tear'){
+    const w=s*M*1.0, h=w*R(mr,0.55,1.8);
+    tornRect(g,cx-w/2,cy-h/2,w,h,mr,(0.25+P.tearAmt)*W/60); g.fill();
+  } else if(sh==='block'){
+    g.save();
+    g.translate(cx,cy);
+    g.rotate(chance(mr,0.72)?0:R(mr,-0.35,0.35));
+    const w=s*M*0.95, h=w*R(mr,0.35,2.0);
+    g.fillRect(-w/2,-h/2,w,h);
+    g.restore();
+  } else if(sh==='band'){
+    if(chance(mr,0.5)){ const h=s*H*0.6; g.fillRect(-W*0.1,cy-h/2,W*1.2,h); }
+    else { const w=s*W*0.6; g.fillRect(cx-w/2,-H*0.1,w,H*1.2); }
+  }
+}
+
+/* bölgesel kaplama: küçültülmüş kopya üzerinden 3x3 ızgara */
+function coverageGrid(cv,gx,gy){
+  const sw=126, sh=Math.max(1,Math.round(sw*cv.height/cv.width));
+  const t=document.createElement('canvas'); t.width=sw; t.height=sh;
+  const g=t.getContext('2d',{willReadFrequently:true});
+  g.fillStyle=PAPER; g.fillRect(0,0,sw,sh);
+  g.drawImage(cv,0,0,sw,sh);
+  const d=g.getImageData(0,0,sw,sh).data;
+  const hit=new Float32Array(gx*gy), tot=new Float32Array(gx*gy);
+  for(let y=0;y<sh;y++){
+    const gj=Math.min(gy-1,(y/sh*gy)|0);
+    for(let x=0;x<sw;x++){
+      const gi=Math.min(gx-1,(x/sw*gx)|0);
+      const i=(y*sw+x)*4, k=gj*gx+gi;
+      tot[k]++;
+      if(Math.abs(d[i]-247)+Math.abs(d[i+1]-245)+Math.abs(d[i+2]-240)>30)hit[k]++;
+    }
+  }
+  const cells=[]; let sum=0,n=0;
+  for(let k=0;k<gx*gy;k++){ cells.push(hit[k]/(tot[k]||1)); sum+=hit[k]; n+=tot[k]; }
+  return {cells, mean:n?sum/n:0};
+}
+function emptiestCell(cells,gx,gy){
+  let k=0;
+  for(let i=1;i<cells.length;i++) if(cells[i]<cells[k])k=i;
+  return [((k%gx)+0.5)/gx, ((k/gx|0)+0.5)/gy];
+}
+
+/* ---------- tek kompozisyon ---------- */
+function compose(ctx,W,H,r,P,imgs,collect,mrIn){
+  const mr=mrIn||r;   // maske rastgeleliği: ayrı verilirse içerik sabit kalır, biçimler değişir
+  const tc=document.createElement('canvas'); tc.width=W; tc.height=H;
+  const g=tc.getContext('2d');
+
+  const ORG=['blob','blob','leaf','leaf','sweep'];
+  const GEO=['block','band','tear'];
+  const ORG_T=['blob','blob','leaf','leaf'];      // hedefli doldurmada sweep yok
+  const GEO_T=['block','tear','band'];
+  const bias={panel:0, grid:-0.05, block:-0.45, tachisme:0.18, strata:-0.28}[P.mode]||0;
+  const po=Math.max(0,Math.min(1,P.organic+bias));
+  const roles=assignRoles(P.layers,mr);
+
+  // 3x3 hücre sırası: katmanlar sayfaya yayılsın
+  const order=[0,1,2,3,4,5,6,7,8];
+  for(let i=8;i>0;i--){ const j=Math.floor(mr()*(i+1)); const t=order[i]; order[i]=order[j]; order[j]=t; }
+  const cellCtr=k=>[((k%3)+0.5)/3, ((k/3|0)+0.5)/3];
+
+  function inkLayer(role,forceFull,ctr,seq){
+    inkFromSource(tc,W,H,r,imgs.length?pick(r,imgs):null,P);
+    const useBlack=chance(r,P.inkRatio) || P.palette.length===0;
+    let col = useBlack ? [17,17,17] : hex2rgb(pick(r,P.palette));
+    col = distort(col,r,useBlack?P.shift*0.25:P.shift);
+    thresholdColorize(g,W,H,r,col,{
+      inkLevel: P.inkLevel*R(r,0.78,1.22),
+      mottle: P.mottle*R(r,0.5,1.2),
+      mottleSize: P.mottleSize,
+      soft: P.soft*R(r,0.6,1.4),
+      steps: P.steps,
+      grad: P.grad*R(r,0.55,1.25),
+      gradDir: P.gradDir
+    });
+    if(!forceFull){
+      // biçimleri önce ayrı maskede BİRLEŞTİR, sonra tek seferde uygula
+      const mk=document.createElement('canvas'); mk.width=W; mk.height=H;
+      const mg=mk.getContext('2d');
+      mg.fillStyle='#000';
+      const targeted=!!ctr;
+      const shp=pick(mr, chance(mr,po)?(targeted?ORG_T:ORG):(targeted?GEO_T:GEO));
+      const reps=Math.max(1,Math.round(P.formsPer*(role==='acc'?R(mr,1,2.3):R(mr,0.6,1.35))));
+      for(let k=0;k<reps;k++){
+        const c = ctr ? (k===0?ctr:cellCtr(order[((seq||0)*3+k)%9])) : null;
+        drawShape(mg,shp,W,H,mr,P,role,c);
+      }
+      g.globalCompositeOperation='destination-in';
+      g.drawImage(mk,0,0);
+      g.globalCompositeOperation='source-over';
+    }
+    const dx=chance(r,0.5)?R(r,-0.03,0.03)*W:0;
+    const dy=chance(r,0.5)?R(r,-0.03,0.03)*H:0;
+    const alpha=R(r,0.78,1);
+    const blend=useBlack?'multiply':pick(r,['multiply','multiply','source-over','darken']);
+    ctx.globalAlpha=alpha;
+    ctx.globalCompositeOperation=blend;
+    ctx.drawImage(tc,dx,dy);
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation='source-over';
+    if(collect){
+      const cp=document.createElement('canvas'); cp.width=W; cp.height=H;
+      cp.getContext('2d').drawImage(tc,0,0);
+      collect.push({c:cp,dx,dy,alpha,blend});
+    }
+  }
+
+  for(let L=0;L<P.layers;L++){
+    const role=roles[L];
+    const full = role==='dom' && chance(mr,0.34);
+    inkLayer(role, full, (role==='dom'||full)?null:cellCtr(order[L%9]), L);
+  }
+
+  /* doluluk denetimi: bölge bölge, en boş yere bas */
+  const target=P.fill, tol=0.05;
+  let cg=coverageGrid(ctx.canvas,3,3), guard=0;
+  while(cg.mean<target-tol && guard<10){
+    const gap=target-cg.mean;
+    inkLayer(gap>0.20?'dom':'mid', gap>0.30&&chance(mr,0.6), emptiestCell(cg.cells,3,3), guard+P.layers);
+    cg=coverageGrid(ctx.canvas,3,3); guard++;
+  }
+  guard=0;
+  const floorC=target*0.45;
+  while(Math.min.apply(null,cg.cells)<floorC && guard<4){
+    inkLayer('mid', false, emptiestCell(cg.cells,3,3), guard+P.layers+20);
+    cg=coverageGrid(ctx.canvas,3,3); guard++;
+  }
+  guard=0;
+  while(cg.mean>target+tol && guard<5){
+    let k=0;
+    for(let i=1;i<cg.cells.length;i++) if(cg.cells[i]>cg.cells[k])k=i;
+    const ctr=[((k%3)+0.5)/3, ((k/3|0)+0.5)/3];
+    const cp=document.createElement('canvas'); cp.width=W; cp.height=H;
+    const cgx=cp.getContext('2d');
+    cgx.fillStyle=PAPER;
+    drawShape(cgx,pick(mr,['blob','leaf','tear','blob','leaf']),W,H,mr,P,'mid',ctr);
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=1;
+    ctx.drawImage(cp,0,0);
+    if(collect)collect.push({c:cp,dx:0,dy:0,alpha:1,blend:'source-over'});
+    cg=coverageGrid(ctx.canvas,3,3); guard++;
+  }
+}
+
+/* ---------- kâğıt + gren ---------- */
+function paper(ctx,W,H,r,amount,size,fiberAmt){
+  const d=ctx.getImageData(0,0,W,H), a=d.data;
+  const g=amount*17;
+  const bs=1+Math.round((1-size)*3);          // gren tanesi: 1 px = en ince
+  const fib=fiberAmt>0?valueNoise(r,Math.round(120+size*260),Math.round(120+size*260)):null;
+  const fg=fiberAmt*13;
+  const gw=Math.ceil(W/bs), gh=Math.ceil(H/bs);
+  const cell=new Float32Array(gw*gh);
+  for(let i=0;i<cell.length;i++)cell[i]=(Math.random()-0.5)*g;
+  for(let y=0;y<H;y++){
+    const cy=(y/bs|0)*gw;
+    for(let x=0;x<W;x++){
+      const i=(y*W+x)*4;
+      let n=cell[cy+(x/bs|0)];
+      if(fib)n+=(fib(x/W,y/H)-0.5)*fg;
+      a[i]+=n; a[i+1]+=n; a[i+2]+=n*0.96;
+    }
+  }
+  ctx.putImageData(d,0,0);
+}
+function pageEdge(ctx,W,H,r,amt){
+  ctx.save();
+  ctx.globalCompositeOperation='destination-in';
+  ctx.fillStyle='#000';
+  tornRect(ctx,W*0.012,H*0.012,W*0.976,H*0.976,r,amt*W/90);
+  ctx.fill();
+  ctx.restore();
+}
+function tapeMarks(ctx,W,H,r){
+  const n=RI(r,1,2);
+  for(let i=0;i<n;i++){
+    ctx.save();
+    ctx.globalAlpha=0.5;
+    ctx.fillStyle='#e8e0c4';
+    const w=W*R(r,0.07,0.14), h=H*R(r,0.02,0.05);
+    ctx.translate(R(r,0.2,0.8)*W, chance(r,0.75)?-h*0.3:H-h*0.7);
+    ctx.rotate(R(r,-0.12,0.12));
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+  }
+}
+
+/* ---------- ana render ---------- */
+const cv=document.getElementById('c'), ctx=cv.getContext('2d',{willReadFrequently:true});
+let imgs=[];
+
+/* ---------- sayfa oranı + kolaj düzeni ---------- */
+const RATIOS={
+  a4p:[1000,1414], a4l:[1414,1000], sq:[1,1],
+  h169:[9,16], w169:[16,9], p45:[4,5], l54:[5,4]
+};
+function ratioOf(k){ return RATIOS[k]||RATIOS.a4p; }
+/* uzun kenar hedefe sabitlenir; çift sayı (video kodlayıcı için) */
+function pageSize(k,longEdge){
+  const [rw,rh]=ratioOf(k), m=Math.max(rw,rh);
+  return [Math.max(2,Math.round(rw/m*longEdge/2)*2), Math.max(2,Math.round(rh/m*longEdge/2)*2)];
+}
+/* kısa kenar hedefe sabitlenir — animasyon çözünürlüğü böyle okunur */
+function shortSize(k,shortEdge){
+  const [rw,rh]=ratioOf(k), m=Math.min(rw,rh);
+  return [Math.max(2,Math.round(rw/m*shortEdge/2)*2), Math.max(2,Math.round(rh/m*shortEdge/2)*2)];
+}
+const LAYOUTS={ single:[1,1], duo:[1,2], quad:[2,2], g45:[4,5] };
+function gridOf(P,r){
+  const g = P.layout==='serie' ? [RI(r,3,4),RI(r,4,5)] : (LAYOUTS[P.layout]||LAYOUTS.single);
+  return P.layoutDir==='yatay' ? [g[1],g[0]] : [g[0],g[1]];
+}
+
+function params(){
+  const P={
+    ratio:document.getElementById('ratio').value,
+    layout:document.getElementById('layout').value,
+    layoutDir:document.getElementById('layoutDir').value,
+    cellRatio:document.getElementById('cellRatio').value,
+    mode:document.getElementById('mode').value,
+    layers:+document.getElementById('layers').value,
+    inkLevel:+document.getElementById('ink').value/100,
+    organic:+document.getElementById('organic').value/100,
+    fill:+document.getElementById('fill').value/100,
+    formsPer:+document.getElementById('formsPer').value,
+    hier:+document.getElementById('hier').value/100,
+    tearAmt:+document.getElementById('tear').value/100,
+    mottle:+document.getElementById('mottle').value/100,
+    mottleSize:+document.getElementById('mottleSize').value/100,
+    grain:+document.getElementById('grain').value/100,
+    grainSize:+document.getElementById('grainSize').value/100,
+    fiber:+document.getElementById('fiber').value/100,
+    grad:+document.getElementById('grad').value/100,
+    steps:+document.getElementById('steps').value,
+    soft:+document.getElementById('soft').value/100,
+    gradDir:document.getElementById('gradDir').value,
+    inkRatio:+document.getElementById('inkRatio').value/100,
+    shift:+document.getElementById('shift').value/100,
+    tape:document.getElementById('tape').checked,
+    edge:document.getElementById('edge').checked,
+    palette:colors.slice()
+  };
+  return P;
+}
+
+const PAPER='#f7f5f0';
+function newCv(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+function sheet(w,h,seedStr,P,cutEdge){
+  const r=mulberry32(hashStr(seedStr));
+  const t=document.createElement('canvas'); t.width=w; t.height=h;
+  const g=t.getContext('2d',{willReadFrequently:true});
+  g.fillStyle=PAPER; g.fillRect(0,0,w,h);
+  compose(g,w,h,r,P,imgs);
+  if(P.grain>0||P.fiber>0)paper(g,w,h,r,P.grain,P.grainSize,P.fiber);
+  if(cutEdge&&P.edge)pageEdge(g,w,h,r,P.tearAmt);
+  return t;
+}
+
+/* sayfa yerleşimi: parçaların konum/boyut/eğimi. still ve motion aynı geometriyi paylaşır */
+function pageGeometry(W,H,P,seedStr){
+  if(P.layout==='single') return [{i:0,x:0,y:0,w:W,h:H,rot:0}];
+  const [cols,rows]=gridOf(P,mulberry32(hashStr(seedStr)));
+  const n=cols*rows, dense=n>8;
+  const mx=W*(dense?0.040:0.055), my=H*(dense?0.040:0.050);
+  const cw=(W-mx*2)/cols, ch=(H-my*2)/rows;
+  const pad=dense?0.06:0.08;                       // parça çevresi boşluğu
+  const aw=cw*(1-pad*2), ah=ch*(1-pad*2);
+  let iw,ih;
+  if(P.cellRatio==='auto'){ iw=aw; ih=ah; }
+  else { const [rw,rh]=ratioOf(P.cellRatio), s=Math.min(aw/rw,ah/rh); iw=rw*s; ih=rh*s; }
+  iw=Math.max(12,Math.round(iw)); ih=Math.max(12,Math.round(ih));
+  const items=[];
+  for(let i=0;i<n;i++) items.push({
+    i, w:iw, h:ih,
+    x:mx+(i%cols)*cw+(cw-iw)/2,
+    y:my+Math.floor(i/cols)*ch+(ch-ih)/2,
+    rot:R(mulberry32(hashStr(seedStr+'|'+i)),-0.015,0.015)
+  });
+  return items;
+}
+/* parça başına katman sayısı: kalabalık ızgarada sadeleşir */
+function subParams(P,n){
+  return n===1?P:Object.assign({},P,{layers:Math.max(2,P.layers-(n>8?2:1))});
+}
+
+/* sayfanın tamamı: tek sayfa ya da kolaj ızgarası */
+function composePage(g,W,H,seedStr,P){
+  g.setTransform(1,0,0,1,0,0);
+  g.globalAlpha=1; g.globalCompositeOperation='source-over';
+  g.fillStyle=PAPER; g.fillRect(0,0,W,H);
+  const items=pageGeometry(W,H,P,seedStr);
+  const single=items.length===1;
+  const sub=subParams(P,items.length);
+  items.forEach(it=>{
+    const sd=single?seedStr:seedStr+'|'+it.i;
+    const rr=mulberry32(hashStr(sd));
+    const t=sheet(it.w,it.h,sd,sub,!single);
+    g.save();
+    g.translate(it.x,it.y);
+    g.rotate(it.rot);
+    g.drawImage(t,0,0);
+    if(P.tape)tapeMarks(g,it.w,it.h,rr);
+    g.restore();
+  });
+}
+
+const PRINT_EDGE=2100;   // indirilen PNG'nin uzun kenarı
+
+/* Ekranda gösterilen baskı zaten küçültülüyor; sahnenin kaldıracağından
+   büyük basmanın anlamı yok. Piksel işleri (gren, aşınma, doku) alanla
+   doğru orantılı olduğu için önizlemeyi sahneye göre ölçmek üretimi
+   birkaç kat hızlandırıyor. İndirme yine tam çözünürlükten geçiyor. */
+const PREVIEW_CAP=1400;  // ekranda bundan büyük basmanın gözle farkı yok
+const FIRST_EDGE=640;    // açılışta göze bir şey koymak için hızlı ilk geçiş
+
+function previewEdge(){
+  const m=document.querySelector('main');
+  if(!m)return 1100;
+  // Retina yoğunluğunu tam çarpmıyoruz: gren zaten piksel ölçeğinde,
+  // iki katına çıkarmak süreyi dörde katlıyor, kazandırdığı netlik o kadar değil.
+  const dpr=Math.min(1.5,window.devicePixelRatio||1);
+  const uzun=Math.max(m.clientWidth,m.clientHeight)*dpr;
+  return Math.max(700,Math.min(PREVIEW_CAP,Math.round(uzun)));
+}
+
+function render(seedStr,longEdge){
+  const P=params();
+  const [W,H]=pageSize(P.ratio,longEdge||previewEdge());
+  cv.width=W; cv.height=H;
+  composePage(ctx,W,H,seedStr,P);
+  pageNote(P,W,H);
+}
+
+/* panel altı bilgi + ilgisiz denetimleri kapat */
+function pageNote(P,W,H){
+  const single=P.layout==='single';
+  document.getElementById('layoutDir').disabled=single||P.layout==='quad';
+  document.getElementById('cellRatio').disabled=single;
+  const el=document.getElementById('pageNote');
+  if(!el)return;
+  if(single){ el.textContent=W+'×'+H+' px — single page'; return; }
+  const g=gridOf(P,mulberry32(hashStr('n')));
+  const cnt=P.layout==='serie'?'random':(g[0]+'×'+g[1]+' = '+g[0]*g[1]+' pieces');
+  el.textContent=W+'×'+H+' px — '+cnt;
+}
+
+/* ---------- palet ---------- */
+let colors=['#c8102e','#0b3d91','#e4b429','#3f7d4e'];
+function drawSwatches(){
+  const el=document.getElementById('swatches'); el.innerHTML='';
+  colors.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='sw'; d.style.background=c;
+    const inp=document.createElement('input'); inp.type='color'; inp.value=c;
+    inp.oninput=e=>{colors[i]=e.target.value; d.style.background=e.target.value; save(); go();};
+    const x=document.createElement('div'); x.className='x'; x.textContent='×';
+    x.onclick=e=>{e.stopPropagation(); colors.splice(i,1); drawSwatches(); save(); go();};
+    d.appendChild(inp); d.appendChild(x); el.appendChild(d);
+  });
+}
+document.getElementById('addColor').onclick=()=>{colors.push('#888888'); drawSwatches(); save();};
+
+/* ---------- görsel slotları + kalıcılık ---------- */
+let db;
+const idb=indexedDB.open('kolaj',1);
+idb.onupgradeneeded=e=>e.target.result.createObjectStore('img');
+idb.onsuccess=e=>{db=e.target.result; loadImgs();};
+function putImg(k,blob){db&&db.transaction('img','readwrite').objectStore('img').put(blob,k);}
+function delImgs(){db&&db.transaction('img','readwrite').objectStore('img').clear();}
+function loadImgs(){
+  const st=db.transaction('img','readonly').objectStore('img');
+  st.getAll().onsuccess=async e=>{
+    const blobs=e.target.result||[];
+    imgs=[]; for(const b of blobs){ imgs.push(await createImageBitmap(b)); }
+    syncSlots(); go();
+  };
+}
+function syncSlots(){
+  const el=document.getElementById('slots'); el.innerHTML='';
+  for(let i=0;i<5;i++){
+    const d=document.createElement('div'); d.className='slot'+(imgs[i]?' on':'');
+    if(imgs[i]){
+      const t=document.createElement('canvas'); t.width=90; t.height=90;
+      t.getContext('2d').drawImage(imgs[i],0,0,90,90);
+      d.style.backgroundImage='url('+t.toDataURL()+')';
+    } else d.textContent='+';
+    d.onclick=()=>fileInput.click();
+    el.appendChild(d);
+  }
+  document.getElementById('imgCount').textContent=imgs.length+'/5';
+}
+const fileInput=document.createElement('input');
+fileInput.type='file'; fileInput.accept='image/*'; fileInput.multiple=true;
+fileInput.onchange=e=>addFiles([...e.target.files]);
+async function addFiles(files){
+  for(const f of files){
+    if(imgs.length>=5)break;
+    if(!f.type.startsWith('image/'))continue;
+    const bmp=await createImageBitmap(f);
+    imgs.push(bmp); putImg(imgs.length-1,f);
+  }
+  syncSlots(); go();
+}
+document.body.addEventListener('dragover',e=>{e.preventDefault(); document.getElementById('panel').classList.add('drop');});
+document.body.addEventListener('dragleave',()=>document.getElementById('panel').classList.remove('drop'));
+document.body.addEventListener('drop',e=>{e.preventDefault(); document.getElementById('panel').classList.remove('drop'); addFiles([...e.dataTransfer.files]);});
+document.getElementById('clearImgs').onclick=()=>{imgs=[]; delImgs(); syncSlots(); go();};
+
+/* ---------- ayar kalıcılığı ---------- */
+const ids=['ratio','layout','layoutDir','cellRatio',
+  'mode','layers','organic','ink','fill','formsPer','hier','tear','grad','steps','soft','gradDir',
+  'grain','grainSize','fiber','mottle','mottleSize','inkRatio','shift','tape','edge','seed'];
+function save(){
+  const o={colors};
+  ids.forEach(i=>{const el=document.getElementById(i); o[i]=el.type==='checkbox'?el.checked:el.value;});
+  localStorage.setItem('kolaj',JSON.stringify(o));
+}
+function restore(){
+  try{
+    const o=JSON.parse(localStorage.getItem('kolaj')||'{}');
+    if(o.colors&&o.colors.length)colors=o.colors;
+    if(o.mode==='grid'){ o.mode='panel'; if(o.layout===undefined)o.layout='serie'; }  // eski kayıt
+    ids.forEach(i=>{if(o[i]===undefined)return; const el=document.getElementById(i); if(el.type==='checkbox')el.checked=o[i]; else el.value=o[i];});
+  }catch(e){}
+}
+
+/* ---------- etiketler + olaylar ---------- */
+const labels={layers:'vLayers',organic:'vOrganic',ink:'vInk',fill:'vFill',formsPer:'vForms',hier:'vHier',tear:'vTear',
+  grad:'vGrad',steps:'vSteps',soft:'vSoft',
+  grain:'vGrain',grainSize:'vGrainSize',fiber:'vFiber',mottle:'vMottle',mottleSize:'vMottleSize',
+  inkRatio:'vInkRatio',shift:'vShift',
+  camMap:'vCamMap',camTravel:'vCamTravel',camZoom:'vCamZoom',camFall:'vCamFall',camJump:'vCamJump',
+  camSplit:'vCamSplit',camPara:'vCamPara',camFlow:'vCamFlow',camSpread:'vCamSpread'};
+function syncLabels(){for(const k in labels)document.getElementById(labels[k]).textContent=document.getElementById(k).value;}
+ids.forEach(i=>{
+  const el=document.getElementById(i);
+  const h=()=>{
+    syncLabels(); save(); go();
+    if(document.getElementById('veil').classList.contains('on'))queuePreview();
+  };
+  el.addEventListener('input',h);
+  el.addEventListener('change',h);
+});
+
+let goTimer=null, busy=false;
+let olcuTimer=null;
+window.addEventListener('resize',()=>{ clearTimeout(olcuTimer); olcuTimer=setTimeout(go,200); });
+function go(){ clearTimeout(goTimer); goTimer=setTimeout(runRender,150); }
+let ilkGecisYapildi=false;
+
+function runRender(){
+  if(busy)return;
+  busy=true;
+  const b=document.getElementById('busy');
+  if(b)b.style.display='block';
+  const sd=document.getElementById('seed').value;
+
+  // Açılışta önce kaba bir baskı: sahne boş beklemesin.
+  if(!ilkGecisYapildi){
+    try{ render(sd,FIRST_EDGE); }catch(e){}
+    ilkGecisYapildi=true;
+  }
+
+  setTimeout(()=>{
+    try{ render(sd); }
+    finally{ busy=false; if(b)b.style.display='none'; }
+  },16);
+}
+function newSeed(){
+  const s=Math.floor(Math.random()*1e9).toString(36).toUpperCase();
+  document.getElementById('seed').value=s;
+  if(document.getElementById('genRnd').checked){
+    Object.keys(SECTIONS).forEach(k=>{ if(!locked(k))randomizeSection(k); });
+    syncLabels();
+  }
+  save(); go();
+}
+document.getElementById('reseed').onclick=newSeed;
+document.getElementById('gen').onclick=newSeed;
+document.getElementById('save').onclick=()=>{
+  const sd=document.getElementById('seed').value;
+  render(sd,PRINT_EDGE);
+  const a=document.createElement('a');
+  a.download='kolaj_'+sd+'.png';
+  a.href=cv.toDataURL('image/png'); a.click();
+  render(sd);   // ekrana hafif olanı geri koy
+};
+document.getElementById('save10').onclick=async()=>{
+  for(let i=0;i<10;i++){
+    newSeed();
+    const sd=document.getElementById('seed').value;
+    render(sd,PRINT_EDGE);
+    const a=document.createElement('a');
+    a.download='kolaj_'+sd+'.png';
+    a.href=cv.toDataURL('image/png'); a.click();
+    await new Promise(r=>setTimeout(r,350));
+  }
+  render(document.getElementById('seed').value);
+};
+document.getElementById('reset').onclick=()=>{
+  localStorage.removeItem('kolaj'); localStorage.removeItem('kolajLocks'); location.reload();
+};
+
+/* ---------- bölüm kilidi + rastgeleleştirme ---------- */
+const SECTIONS={
+  palette:['inkRatio','shift'],
+  comp:['layers','organic','ink','fill','formsPer','hier','tear'],
+  grad:['grad','steps','soft','gradDir'],
+  noise:['grain','grainSize','fiber','mottle','mottleSize']
+};
+// kullanışlı aralıklar: kaydırağın uçlarına savrulmasın
+const RND={
+  inkRatio:[25,90], shift:[0,70],
+  layers:[3,8], organic:[35,100], ink:[25,70], fill:[45,92], formsPer:[1,6], hier:[25,100], tear:[0,45],
+  grad:[0,80], steps:[1,10], soft:[5,55],
+  grain:[6,30], grainSize:[70,100], fiber:[0,35], mottle:[10,65], mottleSize:[40,100]
+};
+function locked(key){
+  const el=document.querySelector('.lk[data-s="'+key+'"]');
+  return el?el.checked:false;
+}
+function randomizeSection(key){
+  SECTIONS[key].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(el.tagName==='SELECT'){
+      el.selectedIndex=Math.floor(Math.random()*el.options.length);
+    } else {
+      const lim=RND[id]||[+el.min,+el.max];
+      const lo=Math.max(+el.min,lim[0]), hi=Math.min(+el.max,lim[1]);
+      el.value=Math.round(lo+Math.random()*(hi-lo));
+    }
+  });
+}
+function randomizeUnlocked(){
+  Object.keys(SECTIONS).forEach(k=>{ if(!locked(k))randomizeSection(k); });
+  syncLabels(); saveLocks(); save(); go();
+}
+document.querySelectorAll('button[data-rnd]').forEach(b=>{
+  b.onclick=()=>{ randomizeSection(b.dataset.rnd); syncLabels(); save(); go(); };
+});
+document.querySelectorAll('.lk').forEach(c=>{ c.onchange=saveLocks; });
+function saveLocks(){
+  const o={};
+  document.querySelectorAll('.lk').forEach(c=>o[c.dataset.s]=c.checked);
+  o.genRnd=document.getElementById('genRnd').checked;
+  localStorage.setItem('kolajLocks',JSON.stringify(o));
+}
+function restoreLocks(){
+  try{
+    const o=JSON.parse(localStorage.getItem('kolajLocks')||'{}');
+    document.querySelectorAll('.lk').forEach(c=>{ if(o[c.dataset.s]!==undefined)c.checked=o[c.dataset.s]; });
+    if(o.genRnd!==undefined)document.getElementById('genRnd').checked=o.genRnd;
+  }catch(e){}
+}
+document.getElementById('genRnd').onchange=saveLocks;
+document.getElementById('rndAll').onclick=randomizeUnlocked;
+
+/* ---------- kamera + katman motoru (WebGL2) ----------
+   Her parça kendi kompozisyonunu çıktı kadrajından büyük basar: parça haritası.
+   Her parçanın kendi kamerası vardır — bağımsız yol, düşme, zıplama, bölünme.
+   Her katman o kamerayı kendi derinliğinde izler: arka yavaş, ön hızlı (ayrışma).
+   Üstüne isteğe bağlı akış (alan bükümü) binebilir.
+   Bütün bileşenler t'nin (0..1) periyodik fonksiyonudur.
+   Animasyon tohumu yalnızca hareketi sürer; kompozisyona dokunmaz.          */
+
+const MIME=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm']
+  .find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t));
+
+let animMode='path', animResV=1080, DUR=6000;
+let lastBlob=null, recording=false, building=false, pvRAF=null, pvTimer=null;
+let GL=null, scene=null, mapKey='';
+
+/* kip karakterleri: kaydırakların üzerine binen çarpanlar */
+const MODES={
+  path: {travel:1.00, fall:0.00, jump:0.20, split:0.00, zoom:1.00, flow:1.00, print:0},
+  fall: {travel:0.40, fall:1.00, jump:0.35, split:0.00, zoom:0.65, flow:0.80, print:0},
+  jump: {travel:0.30, fall:0.25, jump:1.00, split:0.20, zoom:1.15, flow:0.60, print:0},
+  split:{travel:0.70, fall:0.20, jump:0.40, split:1.00, zoom:0.85, flow:0.80, print:0},
+  print:{travel:0.55, fall:0.10, jump:0.15, split:0.00, zoom:0.80, flow:1.20, print:1}
+};
+
+const VS=`#version 300 es
+in vec2 aPos; out vec2 vUV;
+uniform vec4 uRect;     /* ndc merkez xy + yarı boyut zw */
+uniform mat2 uRot;
+void main(){ vUV=aPos*0.5+0.5; gl_Position=vec4(uRot*(aPos*uRect.zw)+uRect.xy,0.0,1.0); }`;
+
+const NOISE=`
+float hash(vec2 p){ p=fract(p*vec2(127.31,311.7)); p+=dot(p,p+34.23); return fract(p.x*p.y*95.43); }
+float pn(vec2 p, float per){
+  vec2 i=floor(p), f=fract(p), u=f*f*(3.0-2.0*f);
+  float a=hash(mod(i,vec2(per)));
+  float b=hash(mod(i+vec2(1.0,0.0),vec2(per)));
+  float c=hash(mod(i+vec2(0.0,1.0),vec2(per)));
+  float d=hash(mod(i+vec2(1.0,1.0),vec2(per)));
+  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);
+}`;
+
+const FS_LAYER=`#version 300 es
+precision highp float;
+in vec2 vUV; out vec4 o;
+uniform sampler2D uPrev, uLay;
+uniform vec4 uCam;      /* katmanın harita içindeki kesiti: sx, sy, sw, sh */
+uniform vec2 uDir, uRes;
+uniform float uAlpha, uT, uAmp, uFreq, uPh, uVis, uOpaque;
+uniform int uBlend;
+${NOISE}
+vec2 field(vec2 uv, float tt){
+  float per=uFreq;
+  vec2 p=uv*uFreq + uDir*tt*uFreq + vec2(uPh);
+  float ax=pn(p,per)-0.5;
+  float ay=pn(p+vec2(floor(per*0.41)+1.0,floor(per*0.73)+2.0),per)-0.5;
+  vec2 q=vec2(ax,ay);
+  vec2 p2=(p+q*2.2)*2.0;
+  float bx=pn(p2,per*2.0)-0.5;
+  float by=pn(p2+vec2(floor(per*0.87)+3.0,floor(per*0.29)+1.0),per*2.0)-0.5;
+  return q*0.78+vec2(bx,by)*0.34;
+}
+void main(){
+  vec2 uv=uCam.xy+vUV*uCam.zw;
+  /* akış: t=0 ve t=1'de sıfır, döngüyü bozmaz */
+  if(uAmp>0.0) uv+=(field(uv,uT)-field(uv,0.0))*uAmp*uCam.zw;
+  vec4 sc=(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0)?vec4(0.0):texture(uLay,uv);
+  /* hedef her zaman tam kadraj: bölünmede quad kadrajın bir bölümüne oturur */
+  vec4 dc=texture(uPrev,gl_FragCoord.xy/uRes);
+  float a=sc.a*uAlpha*uVis;
+  if(uOpaque>0.5){ o=vec4(mix(dc.rgb,sc.rgb,a),1.0); return; }
+  vec3 r;
+  if(uBlend==1) r=mix(dc.rgb, sc.rgb*dc.rgb, a);
+  else if(uBlend==2) r=mix(dc.rgb, min(sc.rgb,dc.rgb), a);
+  else r=mix(dc.rgb, sc.rgb, a);
+  o=vec4(r,1.0);
+}`;
+
+const FS_BLIT=`#version 300 es
+precision highp float; in vec2 vUV; out vec4 o;
+uniform sampler2D uSrc;
+void main(){ o=texture(uSrc,vUV); }`;
+
+const FS_OUT=`#version 300 es
+precision highp float; in vec2 vUV; out vec4 o;
+uniform sampler2D uSrc;
+uniform float uGrain,uSeed,uCell;
+${NOISE}
+void main(){
+  vec3 c=texture(uSrc,vUV).rgb;
+  float g=uGrain>0.0?(hash(floor(vUV*uCell)+vec2(uSeed,uSeed*1.7))-0.5)*uGrain:0.0;
+  o=vec4(clamp(c+g,0.0,1.0),1.0);
+}`;
+
+function glProg(gl,fsSrc){
+  const sh=(type,src)=>{
+    const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const p=gl.createProgram();
+  gl.attachShader(p,sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+  const u={}, n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);
+  for(let i=0;i<n;i++){const nm=gl.getActiveUniform(p,i).name; u[nm]=gl.getUniformLocation(p,nm);}
+  return {p,u};
+}
+function glFbo(gl,w,h){
+  const t=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const f=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  return {f,t,w,h};
+}
+function glInit(){
+  if(GL)return GL;
+  const c=document.createElement('canvas');
+  const gl=c.getContext('webgl2',{alpha:false,antialias:false,preserveDrawingBuffer:true});
+  if(!gl)return null;
+  const q=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,q);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const va=gl.createVertexArray();
+  gl.bindVertexArray(va);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  GL={c,gl,va,pLayer:glProg(gl,FS_LAYER),pBlit:glProg(gl,FS_BLIT),pOut:glProg(gl,FS_OUT),
+      a:null,b:null,page:null,tw:0,th:0};
+  return GL;
+}
+const IDENT=new Float32Array([1,0,0,1]);
+function glQuad(G,prog,rect,rot){
+  const gl=G.gl;
+  gl.uniform4f(prog.u.uRect,rect[0],rect[1],rect[2],rect[3]);
+  gl.uniformMatrix2fv(prog.u.uRot,false,rot||IDENT);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+function texFrom(gl,cvs){
+  const t=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cvs);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  return t;
+}
+function disposeScene(){
+  if(!scene||!GL)return;
+  const gl=GL.gl;
+  scene.tiles.forEach(t=>t.layers.forEach(L=>gl.deleteTexture(L.tex)));
+  scene=null;
+}
+
+/* ---------- kamera sabitleri ---------- */
+const TP=Math.PI*2;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const DIRS=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+
+function buildCam(r){
+  return {
+    a1:R(r,0.20,0.44), a2:R(r,0.06,0.20), p1:R(r,0,TP), p2:R(r,0,TP),
+    b1:R(r,0.20,0.44), b2:R(r,0.06,0.20), q1:R(r,0,TP), q2:R(r,0,TP),
+    h1:RI(r,1,2), h2:RI(r,2,4), h3:RI(r,2,5),      /* harmonikler tam sayı: yol kapanır */
+    falls:RI(r,2,5), jumps:RI(r,3,9), zn:RI(r,1,3), zp:R(r,0,TP),
+    jseed:Math.floor(r()*1e9)>>>0,
+    spAt:r(), spLen:R(r,0.18,0.45), spQuad:chance(r,0.45), spSeed:Math.floor(r()*1e9)>>>0
+  };
+}
+/* t anındaki kamera merkezi (0..1) + yakınlaşma */
+function camAt(t,mo,C,M){
+  const tv=mo.travel*M.travel;
+  let x=0.5+tv*(C.a1*Math.sin(TP*t*C.h1+C.p1)+C.a2*Math.sin(TP*t*C.h2+C.p2));
+  let y=0.5+tv*(C.b1*Math.cos(TP*t*C.h1+C.q1)+C.b2*Math.sin(TP*t*C.h3+C.q2));
+  const fl=mo.fall*M.fall;
+  if(fl>0){ const f=(t*C.falls)%1; y+=fl*0.60*(f*f-0.33); }
+  const jp=mo.jump*M.jump;
+  if(jp>0){
+    const k=Math.floor(t*C.jumps)%C.jumps;
+    const jr=mulberry32((C.jseed+k*7919)>>>0);
+    const f=(t*C.jumps)%1;
+    x+=jp*(R(jr,-0.44,0.44)+R(jr,-0.07,0.07)*f);
+    y+=jp*(R(jr,-0.44,0.44)+R(jr,-0.07,0.07)*f);
+  }
+  const z=1+mo.zoom*M.zoom*1.4*(0.5+0.5*Math.sin(TP*t*C.zn+C.zp));
+  return {x,y,z};
+}
+
+/* ---------- sahne: parça × katman ---------- */
+const TEX_BUDGET=52e6;            /* toplam texture pikseli: bellek dizgini */
+const MAX_LAYERS=6;               /* fazlası opak arka gruba katlanır */
+
+function collectLayers(w,h,seedStr,P){
+  const t=newCv(w,h), g=t.getContext('2d',{willReadFrequently:true});
+  g.fillStyle=PAPER; g.fillRect(0,0,w,h);
+  const out=[];
+  compose(g,w,h,mulberry32(hashStr(seedStr)),P,imgs,out);
+  return out;
+}
+/* ilk fazla katmanları kâğıt zeminli tek opak katmana indirger:
+   blend zinciri korunur, bellek ve çizim sayısı düşer */
+function foldLayers(raw,w,h){
+  if(raw.length<=MAX_LAYERS){
+    const base=newCv(w,h), bg=base.getContext('2d');
+    bg.fillStyle=PAPER; bg.fillRect(0,0,w,h);
+    const f=raw[0];
+    bg.globalAlpha=f.alpha; bg.globalCompositeOperation=f.blend;
+    bg.drawImage(f.c,f.dx,f.dy);
+    return [{c:base,alpha:1,blend:'source-over',opaque:1}].concat(raw.slice(1));
+  }
+  const k=raw.length-(MAX_LAYERS-1);
+  const base=newCv(w,h), bg=base.getContext('2d');
+  bg.fillStyle=PAPER; bg.fillRect(0,0,w,h);
+  for(let i=0;i<k;i++){
+    const L=raw[i];
+    bg.globalAlpha=L.alpha; bg.globalCompositeOperation=L.blend;
+    bg.drawImage(L.c,L.dx,L.dy);
+  }
+  bg.globalAlpha=1; bg.globalCompositeOperation='source-over';
+  return [{c:base,alpha:1,blend:'source-over',opaque:1}].concat(raw.slice(k));
+}
+
+function buildScene(W,H,seedStr,P,mo,animSeed){
+  const G=glInit(); if(!G)return null;
+  const gl=G.gl;
+  disposeScene();
+  G.c.width=W; G.c.height=H;
+  const items=pageGeometry(W,H,P,seedStr);
+  const n=items.length, single=n===1;
+  const sub=subParams(P,n);
+
+  /* harita ölçeği bütçeye göre kısılır */
+  let sc=mo.mapScale;
+  const px=()=>n*MAX_LAYERS*(items[0].w*sc)*(items[0].h*sc);
+  if(px()>TEX_BUDGET) sc=Math.max(1,sc*Math.sqrt(TEX_BUDGET/px()));
+
+  const ar=mulberry32(hashStr(animSeed));
+  const tiles=items.map(it=>{
+    const mw=Math.max(8,Math.round(it.w*sc)), mh=Math.max(8,Math.round(it.h*sc));
+    const sd=single?seedStr:seedStr+'|'+it.i;
+    const raw=foldLayers(collectLayers(mw,mh,sd,sub),mw,mh);
+    const N=raw.length;
+    const layers=raw.map((L,li)=>({
+      tex:texFrom(gl,L.c),
+      alpha:L.alpha,
+      opaque:L.opaque||0,
+      blend:L.blend==='multiply'?1:(L.blend==='darken'?2:0),
+      depth:N>1?li/(N-1):0,                  /* 0 arka, 1 ön */
+      ph:RI(ar,0,96), dir:pick(ar,DIRS), spd:RI(ar,1,3),
+      fs:R(ar,0.8,1.3), as:R(ar,0.85,1.25),
+      dh:RI(ar,1,3), dp:R(ar,0,TP)           /* katmanın kendi küçük sapması */
+    }));
+    return {x:it.x,y:it.y,w:it.w,h:it.h,rot:it.rot,mw,mh,layers,cam:buildCam(ar)};
+  });
+
+  const tw=tiles[0].w, th=tiles[0].h;
+  if(!G.a||G.tw!==tw||G.th!==th){ G.a=glFbo(gl,tw,th); G.b=glFbo(gl,tw,th); G.tw=tw; G.th=th; }
+  G.page=glFbo(gl,W,H);
+  scene={tiles,W,H,scale:sc,want:mo.mapScale};
+  return scene;
+}
+
+function motion(){
+  const g=id=>+document.getElementById(id).value;
+  return {
+    mode:animMode,
+    mapScale:g('camMap')/100,
+    travel:g('camTravel')/100, zoom:g('camZoom')/100,
+    fall:g('camFall')/100, jump:g('camJump')/100, split:g('camSplit')/100,
+    para:g('camPara')/100, flow:g('camFlow')/100, spread:g('camSpread')/100
+  };
+}
+function printVis(li,n,t){
+  if(li===0)return 1;                       /* opak arka her zaman var */
+  const span=1/(n+0.4);
+  const v=(t-(li-1)*span)/span;
+  return v<=0?0:(v>=1?1:v);
+}
+
+const SPLIT2H=[[0,0,1,.5],[0,.5,1,.5]];
+const SPLIT2V=[[0,0,.5,1],[.5,0,.5,1]];
+const SPLIT4=[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]];
+
+function glFrame(t,P,mo,seedN){
+  const G=GL, gl=G.gl, {W,H}=scene;
+  const M=MODES[mo.mode]||MODES.path;
+  const pc=hex2rgb(PAPER).map(v=>v/255);
+  const freq=Math.max(2,Math.round(2+0.4*16));
+
+  gl.bindVertexArray(G.va);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,G.page.f);
+  gl.viewport(0,0,W,H);
+  gl.clearColor(pc[0],pc[1],pc[2],1); gl.clear(gl.COLOR_BUFFER_BIT);
+
+  const pr=G.pLayer;
+
+  scene.tiles.forEach((tile,ti)=>{
+    const C=tile.cam;
+    /* parça kendi fazında: aynı yol, kaydırılmış zaman */
+    const tt=(t+mo.spread*(ti*0.6180339887))%1;
+    const base=camAt(tt,mo,C,M);
+
+    /* bölünme parça içinde: kadraj parçalanır, her bölüm ayrı bölge */
+    const sp=mo.split*M.split;
+    const spd=((tt-C.spAt)%1+1)%1;
+    const parts=(sp>0&&spd<C.spLen*sp)
+      ? (C.spQuad?SPLIT4:(C.spSeed%2?SPLIT2H:SPLIT2V))
+      : [[0,0,1,1]];
+
+    let src=G.a, dst=G.b;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,src.f);
+    gl.viewport(0,0,tile.w,tile.h);
+    gl.clearColor(pc[0],pc[1],pc[2],1); gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(pr.p);
+    gl.uniform1i(pr.u.uPrev,0); gl.uniform1i(pr.u.uLay,1);
+
+    /* katman dışta, bölüm içte: her geçişte hedef tam kaplanır */
+    tile.layers.forEach((L,li)=>{
+      const vis=M.print?printVis(li,tile.layers.length,tt):1;
+      if(vis<=0)return;
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER,dst.f);
+      gl.viewport(0,0,tile.w,tile.h);
+      gl.uniform2f(pr.u.uRes,tile.w,tile.h);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,src.t);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,L.tex);
+      gl.uniform2f(pr.u.uDir,L.dir[0]*L.spd,L.dir[1]*L.spd);
+      gl.uniform1f(pr.u.uAlpha,L.alpha);
+      gl.uniform1i(pr.u.uBlend,L.blend);
+      gl.uniform1f(pr.u.uOpaque,L.opaque);
+      gl.uniform1f(pr.u.uT,tt);
+      gl.uniform1f(pr.u.uAmp,mo.flow*M.flow*0.22*L.as*(M.print?(1+(1-vis)*1.6):1));
+      gl.uniform1f(pr.u.uFreq,Math.max(2,Math.round(freq*L.fs)));
+      gl.uniform1f(pr.u.uPh,L.ph);
+      gl.uniform1f(pr.u.uVis,vis);
+
+      /* katman ayrışması: arka yavaş, ön hızlı + kendi küçük sapması */
+      const f=1+mo.para*(L.depth-0.45)*0.60;
+      const drift=mo.para*0.035*(Math.sin(TP*tt*L.dh+L.dp)-Math.sin(L.dp));
+
+      parts.forEach((pt,pi)=>{
+        const prr=mulberry32((C.spSeed+pi*104729)>>>0);
+        const multi=parts.length>1;
+        const ox=multi?R(prr,-0.34,0.34):0;
+        const oy=multi?R(prr,-0.34,0.34):0;
+        const pz=multi?R(prr,0.9,1.5):1;
+        const z=Math.max(1,base.z*pz*(1+mo.para*(L.depth-0.5)*0.18));
+        const sw=Math.min(1,1/(scene.scale*z)), sh=sw;
+        const sx=clamp(0.5+(base.x-0.5)*f+ox+drift-sw/2,0,1-sw);
+        const sy=clamp(0.5+(base.y-0.5)*f+oy-drift-sh/2,0,1-sh);
+        gl.uniform4f(pr.u.uCam,sx,1-sy-sh,sw,sh);      /* GL'de y yukarı */
+        glQuad(G,pr,[pt[0]*2+pt[2]-1,1-(pt[1]*2+pt[3]),pt[2],pt[3]],null);
+      });
+      const tmp=src; src=dst; dst=tmp;
+    });
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER,G.page.f);
+    gl.viewport(0,0,W,H);
+    gl.useProgram(G.pBlit.p);
+    gl.uniform1i(G.pBlit.u.uSrc,0);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,src.t);
+    const ca=Math.cos(tile.rot), sa=Math.sin(tile.rot);
+    glQuad(G,G.pBlit,[2*(tile.x+tile.w/2)/W-1,1-2*(tile.y+tile.h/2)/H,tile.w/W,tile.h/H],
+      new Float32Array([ca,sa,-sa,ca]));
+  });
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.viewport(0,0,W,H);
+  const po=G.pOut;
+  gl.useProgram(po.p);
+  gl.uniform1i(po.u.uSrc,0);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,G.page.t);
+  gl.uniform1f(po.u.uGrain,P.grain*0.16);
+  gl.uniform1f(po.u.uCell,W/(1+Math.round((1-P.grainSize)*3)));
+  gl.uniform1f(po.u.uSeed,seedN);
+  glQuad(G,po,[0,0,1,1],null);
+}
+
+/* ---------- canlı önizleme ---------- */
+function stopPreview(){ if(pvRAF)cancelAnimationFrame(pvRAF); pvRAF=null; }
+function runLoop(){
+  stopPreview();
+  const t0=performance.now();
+  let n=0;
+  (function loop(){
+    glFrame(((performance.now()-t0)%DUR)/DUR,params(),motion(),(n++)%977);
+    pvRAF=requestAnimationFrame(loop);
+  })();
+}
+function sceneSig(W,H,seedStr,P,mo){
+  return [W,H,seedStr,mo.mapScale,JSON.stringify(P)].join('~');
+}
+async function buildPreview(force){
+  if(building||recording)return;
+  building=true;
+  stopPreview();
+  const stat=document.getElementById('animStat');
+  const host=document.getElementById('animPrev');
+  const P=params(), mo=motion();
+  const [W,H]=shortSize(P.ratio,animResV);
+  if(!glInit()){ stat.textContent='No WebGL2 in this browser.'; building=false; return; }
+  const sig=sceneSig(W,H,document.getElementById('seed').value,P,mo);
+
+  if(force||sig!==mapKey||!scene){
+    stat.textContent='Printing piece maps...';
+    await new Promise(res=>setTimeout(res,20));
+    const t0=performance.now();
+    try{ buildScene(W,H,document.getElementById('seed').value,P,mo,document.getElementById('animSeed').value); }
+    catch(e){ stat.textContent='Hata: '+e.message; building=false; return; }
+    mapKey=sig;
+    stat.dataset.ms=(performance.now()-t0).toFixed(0);
+  }
+  GL.c.style.cssText='display:block;max-width:100%;max-height:100%;width:auto;height:auto;';
+  if(host.firstChild!==GL.c){ host.innerHTML=''; host.appendChild(GL.c); }
+  const T=scene.tiles[0];
+  stat.textContent=scene.tiles.length+' pieces × '+T.layers.length+' katman — harita '+T.mw+'×'+T.mh
+    +' — kadraj '+W+'×'+H+' — '+(DUR/1000)+' sn'
+    +(stat.dataset.ms?' — print '+stat.dataset.ms+' ms':'')
+    +(scene.scale<scene.want-0.02?' — scale '+scene.scale.toFixed(2)+'× capped':'');
+  runLoop();
+  building=false;
+}
+function queuePreview(force){ clearTimeout(pvTimer); pvTimer=setTimeout(()=>buildPreview(force),260); }
+
+/* ---------- kayıt ---------- */
+async function recordAnim(){
+  if(recording||building)return;
+  const stat=document.getElementById('animStat'), bar=document.getElementById('animBar');
+  const btn=document.getElementById('animRun');
+  if(!MIME){ stat.textContent='This browser cannot record video.'; return; }
+  if(!scene){ stat.textContent='Build the preview first.'; return; }
+  recording=true; btn.disabled=true;
+  stopPreview();
+  const P=params(), mo=motion(), W=scene.W, H=scene.H;
+
+  const stream=GL.c.captureStream(30);
+  const rec=new MediaRecorder(stream,{mimeType:MIME,videoBitsPerSecond:18e6});
+  const chunks=[];
+  rec.ondataavailable=e=>{ if(e.data&&e.data.size)chunks.push(e.data); };
+  const stopped=new Promise(res=>{ rec.onstop=res; });
+  stat.textContent='Kaydediliyor — '+(DUR/1000)+' saniye';
+  bar.style.width='0';
+  glFrame(0,P,mo,0);
+  rec.start();
+  const T0=performance.now();
+  let n=0;
+  await new Promise(res=>{
+    (function step(){
+      const t=(performance.now()-T0)/DUR;
+      if(t>=1){ res(); return; }
+      glFrame(t,P,mo,(n++)%977);
+      bar.style.width=(t*100).toFixed(1)+'%';
+      requestAnimationFrame(step);
+    })();
+  });
+  glFrame(0.9999,P,mo,n%977);
+  await new Promise(res=>setTimeout(res,120));
+  rec.stop();
+  await stopped;
+  bar.style.width='100%';
+
+  lastBlob=new Blob(chunks,{type:MIME});
+  const ext=MIME.indexOf('mp4')>=0?'mp4':'webm';
+  stat.textContent=ext.toUpperCase()+' ready — '+(lastBlob.size/1048576).toFixed(1)+' MB, '+W+'×'+H+', '+(DUR/1000)+' sn';
+  const dl=document.getElementById('animDl');
+  dl.style.display='block';
+  dl.onclick=()=>{
+    const a=document.createElement('a');
+    a.download='kolaj_'+document.getElementById('seed').value+'_'+animMode+'_'+document.getElementById('animSeed').value+'.'+ext;
+    a.href=URL.createObjectURL(lastBlob); a.click();
+  };
+  btn.disabled=false; btn.textContent='Yeniden kaydet';
+  recording=false;
+  runLoop();
+}
+
+/* ---------- modal ---------- */
+function segBind(id,fn){
+  const host=document.getElementById(id);
+  host.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      host.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); fn(b.dataset.v);
+    };
+  });
+}
+segBind('animRes',v=>{ animResV=+v; queuePreview(true); });
+segBind('animDurSeg',v=>{ DUR=+v; });
+document.getElementById('animOpts').querySelectorAll('.opt').forEach(o=>{
+  o.onclick=()=>{
+    document.getElementById('animOpts').querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+    o.classList.add('sel'); animMode=o.dataset.v;      /* harita aynı: anında değişir */
+  };
+});
+function reCam(){
+  if(!scene)return;
+  const ar=mulberry32(hashStr(document.getElementById('animSeed').value));
+  scene.tiles.forEach(t=>{
+    t.layers.forEach(L=>{ L.ph=RI(ar,0,96); L.dir=pick(ar,DIRS); L.spd=RI(ar,1,3);
+      L.fs=R(ar,0.8,1.3); L.as=R(ar,0.85,1.25); L.dh=RI(ar,1,3); L.dp=R(ar,0,TP); });
+    t.cam=buildCam(ar);
+  });
+}
+document.getElementById('animReseed').onclick=()=>{
+  document.getElementById('animSeed').value='K'+Math.floor(Math.random()*1e6).toString(36).toUpperCase();
+  reCam();                                   /* yalnızca hareket; kompozisyon durur */
+};
+document.getElementById('animSeed').addEventListener('change',reCam);
+/* hareket kaydırakları haritayı yeniden basmaz */
+['camTravel','camZoom','camFall','camJump','camSplit','camPara','camFlow','camSpread'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',syncLabels);
+});
+document.getElementById('camMap').addEventListener('input',syncLabels);
+document.getElementById('camMap').addEventListener('change',()=>queuePreview(true));
+document.getElementById('mp4open').onclick=()=>{
+  document.getElementById('veil').classList.add('on');
+  document.getElementById('animBar').style.width='0';
+  document.getElementById('animDl').style.display='none';
+  document.getElementById('animRun').textContent='Kaydet';
+  document.getElementById('animRun').disabled=false;
+  syncLabels();
+  buildPreview();
+};
+function closeAnim(){
+  stopPreview();
+  document.getElementById('veil').classList.remove('on');
+}
+document.getElementById('animClose').onclick=closeAnim;
+document.getElementById('veil').onclick=e=>{ if(e.target.id==='veil')closeAnim(); };
+document.getElementById('animRun').onclick=recordAnim;
+let timer=null;
+document.getElementById('auto').addEventListener('change',e=>{
+  clearInterval(timer);
+  if(e.target.checked)timer=setInterval(newSeed,4000);
+});
+
+restore(); restoreLocks(); drawSwatches(); syncLabels(); syncSlots(); runRender();
+
+/* ---------- Künye ---------- */
+(function(){
+  const k = document.getElementById('kunye');
+  if(!k) return;
+  const modeEl = document.getElementById('mode');
+  const seedEl = document.getElementById('seed');
+
+  function yaz(){
+    const opt = modeEl.options[modeEl.selectedIndex];
+    k.querySelector('.model').textContent = opt ? opt.textContent.split('—')[0].trim() : '';
+    k.querySelector('.seed').textContent = 'seed ' + seedEl.value;
+  }
+
+  yaz();
+  modeEl.addEventListener('change', yaz);
+  seedEl.addEventListener('input', yaz);
+  document.getElementById('gen').addEventListener('click', () => setTimeout(yaz, 0));
+  document.getElementById('reseed').addEventListener('click', () => setTimeout(yaz, 0));
+})();
+</script>
+</body>
+</html>

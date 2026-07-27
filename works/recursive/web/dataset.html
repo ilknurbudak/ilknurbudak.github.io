@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dataset — The Recursive Human</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<main>
+  <div class="kicker">The Archive</div>
+  <h1>Dataset</h1>
+  <p class="lead">Four hand-painted drawings, read as a sequence of raw data. The whole
+    installation is built from these. Nothing is generated from nothing.</p>
+  <div class="grid4" id="grid"></div>
+</main>
+<script type="module">
+  import { STAGES } from "./lib/stages.js";
+  import { mountNav } from "./lib/nav.js";
+  mountNav("dataset.html");
+  const g = document.getElementById("grid");
+  STAGES.forEach(s => {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<a href="stage.html?s=${s.n}"><img src="../assets/dataset/${s.id}.jpg" alt="${s.title}"></a>
+      <figcaption><strong>${s.n} · ${s.title}</strong><br>${s.role}</figcaption>`;
+    g.appendChild(fig);
+  });
+</script>
+</body>
+</html>

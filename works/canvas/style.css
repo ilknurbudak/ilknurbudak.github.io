@@ -1,0 +1,157 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #fff;
+  --bg: #000;
+  --dim: #6b6b6b;
+  --line: 2px solid var(--ink);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font: 600 11px/1.2 Helvetica, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { display: grid; grid-template-rows: 44px 1fr 52px; }
+
+button, input, select { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); }
+
+/* --- üst çubuk --- */
+.bar { display: flex; align-items: center; gap: 10px; padding: 0 10px; border-bottom: var(--line); }
+.brand { font-size: 15px; letter-spacing: 0.3em; padding-right: 6px; }
+.outsize { color: var(--dim); font-size: 9px; letter-spacing: 0.1em; }
+.spacer { flex: 1; }
+.status { color: var(--dim); font-size: 10px; letter-spacing: 0.1em; min-width: 180px; text-align: right; }
+
+/* --- blok düğme --- */
+.btn, .seg button, .slot {
+  background: var(--bg); border: var(--line); border-radius: 0;
+  padding: 6px 10px; cursor: pointer; line-height: 1;
+}
+.btn:hover, .seg button:hover, .slot:hover { background: var(--ink); color: var(--bg); }
+.btn:active { transform: translate(1px, 1px); }
+.btn.solid, .seg button.on { background: var(--ink); color: var(--bg); }
+.seg { display: flex; }
+.seg button { border-right-width: 0; }
+.seg button:last-child { border-right-width: 2px; }
+
+/* raf */
+.shelf { display: flex; gap: 3px; }
+.slot { width: 26px; padding: 6px 0; text-align: center; color: var(--dim); }
+.slot.full { color: var(--ink); box-shadow: inset 0 0 0 3px var(--bg), inset 0 0 0 5px var(--ink); }
+
+/* --- orta --- */
+main { display: grid; grid-template-columns: 1fr clamp(200px, 21vw, 288px); overflow: hidden; }
+
+.stage { position: relative; display: grid; place-items: center; overflow: hidden;
+  background: repeating-conic-gradient(#0c0c0c 0 25%, #000 0 50%) 0 0 / 16px 16px; }
+.stage.hot { outline: 3px dashed var(--ink); outline-offset: -8px; }
+#view { image-rendering: auto; box-shadow: 0 0 0 2px var(--ink); max-width: 100%; max-height: 100%; }
+
+/* fark karışımı: hem ak hem kara tuvalde okunur */
+.kunye { position: absolute; left: 14px; bottom: 12px; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 0 10px; max-width: calc(100% - 28px);
+  font-size: 10px; line-height: 1.4; letter-spacing: 0.08em; font-weight: 500;
+  color: #fff; mix-blend-mode: difference; pointer-events: none; }
+
+.drop { position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; text-align: center;
+  pointer-events: none; mix-blend-mode: difference; color: #fff; }
+.drop-title { font-size: 13px; }
+.drop-sub { font-size: 10px; opacity: 0.55; }
+
+/* --- panel --- */
+.panel { border-left: var(--line); overflow-y: auto; overflow-x: hidden; }
+.panel::-webkit-scrollbar { width: 8px; }
+.panel::-webkit-scrollbar-thumb { background: var(--ink); }
+.panel::-webkit-scrollbar-track { background: var(--bg); }
+
+.sect-h { display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; border-bottom: var(--line); background: var(--ink); color: var(--bg); }
+.sources, .layers { padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+.empty { color: var(--dim); padding: 10px; text-align: center; }
+
+.card { border: 2px solid #2e2e2e; padding: 7px 8px; }
+.card.on { border-color: var(--ink); }
+.card.drag { opacity: 0.4; }
+.card-h { display: flex; align-items: center; gap: 7px; cursor: grab; }
+.card-n { flex: 1; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kind { color: var(--dim); font-size: 9px; }
+.x { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; }
+.x:hover { color: var(--dim); }
+
+.mini { display: flex; align-items: center; gap: 6px; font-size: 9px; color: var(--dim); margin-top: 5px; cursor: pointer; }
+.mini:hover { color: var(--ink); }
+
+input[type=checkbox] { appearance: none; width: 12px; height: 12px; border: var(--line); cursor: pointer; flex: none; }
+input[type=checkbox]:checked { background: var(--ink); box-shadow: inset 0 0 0 2px var(--bg); }
+
+.row { margin-top: 6px; }
+.row-h { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); }
+.row-v { color: var(--ink); }
+
+input[type=range] { appearance: none; width: 100%; height: 14px; background: none; cursor: ew-resize; }
+input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #3a3a3a; }
+input[type=range]::-webkit-slider-thumb { appearance: none; width: 9px; height: 14px; background: var(--ink); margin-top: -6px; }
+
+input.txt, select { width: 100%; margin-top: 6px; background: var(--bg); border: var(--line); padding: 5px 6px; }
+select { border-radius: 0; appearance: none; cursor: pointer; }
+.linenav { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; font-size: 9px; color: var(--dim); }
+.linenav button { background: none; border: var(--line); padding: 2px 8px; cursor: pointer; }
+
+/* --- transport --- */
+.transport { display: flex; align-items: center; gap: 14px; padding: 0 10px; border-top: var(--line); }
+.tg { display: flex; align-items: center; gap: 7px; }
+.tg.grow { flex: 1; }
+.lbl { color: var(--dim); font-size: 9px; }
+.frame { color: var(--dim); font-size: 10px; min-width: 68px; text-align: right; }
+.play { min-width: 66px; }
+
+.scrub { flex: 1; height: 14px; border: var(--line); cursor: ew-resize; position: relative; }
+.scrub-fill { position: absolute; inset: 2px auto 2px 2px; background: var(--ink); width: 0; }
+
+/* --- örtü --- */
+.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); display: grid; place-items: center; z-index: 9; }
+.overlay[hidden] { display: none; }
+.ov-box { display: grid; gap: 14px; justify-items: center; border: var(--line); padding: 26px 34px; }
+.ov-title { font-size: 13px; }
+.ov-sub { color: var(--dim); }
+.pac { display: flex; gap: 3px; }
+.pac i { width: 9px; height: 14px; border: 2px solid var(--ink); }
+.pac i.f { background: var(--ink); }
+
+/* seçili katman yanıp söner: arcade */
+.card.on > .card-h > .card-n { animation: blink 1.4s steps(2, end) infinite; }
+@keyframes blink { 0%, 70% { opacity: 1; } 71%, 100% { opacity: 0.55; } }
+
+/* develop etiketi + mikro butonlar */
+.tag { color: var(--dim); font-size: 9px; margin-left: 2px; }
+.micro { width: 18px; height: 18px; padding: 0; background: var(--bg); border: 2px solid #2e2e2e;
+  color: var(--dim); cursor: pointer; font-size: 10px; line-height: 1; flex: none; }
+.micro:hover { border-color: var(--ink); color: var(--ink); }
+.micro.act { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.card.lock { border-style: dashed; }
+.card.solo { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+/* maske satırı */
+.maskrow { margin-top: 8px; padding-top: 7px; border-top: 1px solid #2e2e2e; }
+.maskrow-h { display: flex; align-items: center; gap: 6px; }
+.maskrow-h .row-l { flex: none; }
+.msel { flex: 1; margin: 0; padding: 3px 5px; font-size: 9px; }
+.hint { color: var(--dim); font-size: 8px; margin-top: 5px; letter-spacing: 0.08em; }
+
+/* fırça */
+.brushbar { display: flex; gap: 5px; padding: 7px; }
+.btn.wide { flex: 1; }
+.stage.brush { cursor: crosshair; }
+.stage.brush #view { box-shadow: 0 0 0 2px var(--ink), 0 0 0 5px #c0392b40; }
+
+
+/* Sitede yayınlanan kopya: video çıkışları yerel sunucuya (server.py) bağlı,
+   GitHub Pages'te Python çalışmıyor. Bu üç düğme burada gizli, PNG duruyor. */
+#saveseq, #saveprores, #savemp4 { display: none; }

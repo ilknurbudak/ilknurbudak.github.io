@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CANVAS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">CANVAS</div>
+  <div class="seg" id="aspect"></div>
+  <div class="seg" id="res"></div>
+  <div class="seg" id="bg"></div>
+  <div class="outsize" id="outsize">—</div>
+  <div class="spacer"></div>
+  <div class="shelf" id="shelf"></div>
+  <button class="btn" id="seedbtn">SEED</button>
+  <button class="btn" id="wild">WILD</button>
+  <div class="status" id="status">WAITING FOR A DRAWING</div>
+</header>
+
+<main>
+  <section class="stage" id="stage">
+    <canvas id="view"></canvas>
+    <div class="kunye" id="kunye"><span class="ad">İLKNUR BUDAK</span><span class="eser">CANVAS</span><span class="model"></span><span class="seed"></span></div>
+    <div class="drop" id="drop">
+      <div class="drop-title">DROP YOUR DRAWING HERE</div>
+      <div class="drop-sub">PNG · JPG · WEBP · TXT</div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="sect">
+      <div class="sect-h">
+        <span>MASK BRUSH</span>
+        <label class="mini"><input type="checkbox" id="brushmode"> PAINT</label>
+      </div>
+      <div class="brushbar" id="brushbar">
+        <button class="btn wide" id="brushclear">CLEAR BRUSH</button>
+        <button class="btn" id="brushinv">INVERT</button>
+      </div>
+    </div>
+    <div class="sect">
+      <div class="sect-h">SOURCES</div>
+      <div id="sources" class="sources"></div>
+    </div>
+    <div class="sect">
+      <div class="sect-h">
+        <span>LAYERS</span>
+        <label class="mini"><input type="checkbox" id="boilon"> BOILING LINE</label>
+      </div>
+      <div id="layers" class="layers"></div>
+    </div>
+  </aside>
+</main>
+
+<footer class="transport">
+  <div class="tg">
+    <span class="lbl">DURATION</span>
+    <div class="seg" id="durations"></div>
+  </div>
+  <div class="tg">
+    <span class="lbl">FPS</span>
+    <div class="seg" id="fpsseg"></div>
+  </div>
+  <div class="tg grow">
+    <button class="btn play" id="play">PLAY</button>
+    <div class="scrub" id="scrub"><div class="scrub-fill" id="scrubfill"></div></div>
+    <div class="frame" id="frameno">000/288</div>
+  </div>
+  <div class="tg">
+    <button class="btn" id="savepng">PNG</button>
+    <button class="btn" id="saveseq">SEQUENCE</button>
+    <button class="btn" id="saveprores">PRORES</button>
+    <button class="btn solid" id="savemp4">MP4</button>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="ov-box">
+    <div class="ov-title" id="ovtitle">PROCESSING</div>
+    <div class="pac" id="pac"></div>
+    <div class="ov-sub" id="ovsub">0%</div>
+    <button class="btn" id="ovcancel">CANCEL</button>
+  </div>
+</div>
+
+<script src="src/noise.js"></script>
+<script src="src/state.js"></script>
+<script src="src/pixel.js"></script>
+<script src="src/vector.js"></script>
+<script src="src/glyph.js"></script>
+<script src="src/mask.js"></script>
+<script src="src/engine.js"></script>
+<script src="src/ui.js"></script>
+</body>
+</html>

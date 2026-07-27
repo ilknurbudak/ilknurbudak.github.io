@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Recursive Human</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<main>
+  <section class="cover">
+    <div class="kicker">A Digital Palimpsest Installation</div>
+    <h1>The Recursive Human</h1>
+    <p class="lead">A face is written, erased, and written again. Four hand drawings,
+      read as a dataset, run as an infinite loop of coding and erasure. This is the
+      experience book — move through it page by page.</p>
+  </section>
+  <section class="contents" id="contents"></section>
+</main>
+<script type="module">
+  import { PAGES } from "./lib/stages.js";
+  import { mountNav } from "./lib/nav.js";
+  mountNav("index.html");
+  const c = document.getElementById("contents");
+  PAGES.filter(p => p.href !== "index.html").forEach((p, i) => {
+    const a = document.createElement("a");
+    a.href = p.href;
+    a.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span><span class="t">${p.label}</span>`;
+    c.appendChild(a);
+  });
+</script>
+</body>
+</html>

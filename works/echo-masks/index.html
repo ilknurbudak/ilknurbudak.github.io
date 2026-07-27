@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Echo Masks</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: #f5f5f5;
+      display: flex;
+      align-items: stretch;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333;
+    }
+
+    main {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      padding: 0;
+      background: #eee;
+      overflow: hidden;
+    }
+
+    /* Canvas, sahnenin ölçüsünde kuruluyor (sketch.js) — burada sadece blok. */
+    canvas {
+      display: block;
+      border: 0;
+    }
+
+    /* Künye: difference ile zemine göre kendini tersler. */
+    .kunye {
+      position: absolute;
+      left: 14px;
+      bottom: 12px;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 10px;
+      max-width: calc(100% - 28px);
+      font-size: 10px;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      color: #fff;
+      mix-blend-mode: difference;
+      pointer-events: none;
+    }
+
+    .kunye .ad { font-weight: 500; }
+
+    /* Kontrol arayüzü sağda. */
+    aside {
+      flex: 0 0 auto;
+      width: clamp(150px, 16vw, 200px);
+      background: #fff;
+      padding: 18px 16px;
+      border-left: 1px solid #e0e0e0;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-size: 9px;
+      color: #999;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .key-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 11px;
+      color: #555;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .key {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      color: #666;
+    }
+
+    .palette-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-top: 6px;
+    }
+
+    .palette-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 9px;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px), (max-height: 420px) {
+      body { flex-direction: column; }
+      aside {
+        width: 100%;
+        height: auto;
+        max-height: 34%;
+        border-left: 0;
+        border-top: 1px solid #e0e0e0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main id="canvas-container">
+    <div class="kunye" id="kunye">
+      <span class="ad">İLKNUR BUDAK</span>
+      <span class="eser">Echo Masks</span>
+      <span class="model"></span>
+      <span class="seed"></span>
+    </div>
+  </main>
+
+  <aside>
+    <h1>ECHO MASKS</h1>
+    <p class="subtitle">Algorithmic Echoes</p>
+
+    <div class="section">
+      <div class="section-title">Presets</div>
+      <div class="key-row"><span>INK (fine)</span><span class="key">1</span></div>
+      <div class="key-row"><span>DENSE</span><span class="key">2</span></div>
+      <div class="key-row"><span>WILD</span><span class="key">3</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <div class="key-row"><span>New seed</span><span class="key">N</span></div>
+      <div class="key-row"><span>Blend mode</span><span class="key">B</span></div>
+      <div class="key-row"><span>Clear</span><span class="key">C</span></div>
+      <div class="key-row"><span>Save PNG</span><span class="key">S</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Palette</div>
+      <div class="palette-preview" id="palette-all"></div>
+    </div>
+
+    <p class="hint">
+      Marks accumulate, they never fade.<br>
+      Try blend modes with B.<br>
+      C clears, N draws a new seed.
+    </p>
+  </aside>
+
+  <script>
+    const colors = [
+      '#ed3b2b', '#efb72b', '#f9a302', '#ee8a20', '#fdd660',
+      '#7da85a', '#344a2e', '#366b34', '#315323', '#92cc5f',
+      '#171d6a', '#100c7b', '#1357c4', '#3a2349', '#616df3',
+      '#f98939', '#d36e20', '#fcca42', '#ec7328',
+      '#28845a', '#b6eea4', '#a2e4af',
+      '#641d1e', '#ef433d'
+    ];
+    const container = document.getElementById('palette-all');
+    colors.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'palette-color';
+      div.style.background = c;
+      container.appendChild(div);
+    });
+  </script>
+
+  <script src="sketch.js"></script>
+
+</body>
+</html>

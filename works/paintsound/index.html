@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>paintsound</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="bar">
+      <span class="brand">paintsound</span>
+
+      <div class="group">
+        <button id="play">play</button>
+        <button id="clear">clear</button>
+        <button id="undo">undo</button>
+        <button id="export">export</button>
+      </div>
+
+      <div class="group">
+        <label>page</label>
+        <button id="pagePrev" class="mini">&lsaquo;</button>
+        <span class="val" id="pageInd">1/1</span>
+        <button id="pageNext" class="mini">&rsaquo;</button>
+        <button id="pageAdd">+page</button>
+        <button id="pageDup">dup</button>
+        <button id="pageDel">del</button>
+      </div>
+
+      <div class="group">
+        <label>scale</label>
+        <select id="scale"></select>
+        <select id="root"></select>
+      </div>
+
+      <div class="group">
+        <label>voice</label>
+        <span id="voiceSwatch" class="swatch"></span>
+        <select id="voice"></select>
+      </div>
+
+      <div class="group">
+        <label>loop</label>
+        <input id="loop" type="range" min="1" max="8" step="0.5" />
+        <span class="val" id="loopVal"></span>
+      </div>
+
+      <div class="group">
+        <label>steps</label>
+        <input id="steps" type="range" min="4" max="32" step="1" />
+        <span class="val" id="stepsVal"></span>
+      </div>
+
+      <div class="group">
+        <label>echo</label>
+        <input id="echoR" type="range" min="0" max="0.6" step="0.02" />
+        <span class="val" id="echoVal"></span>
+      </div>
+
+      <div class="group">
+        <button id="midi">midi off</button>
+      </div>
+
+      <span class="status" id="status"></span>
+    </div>
+
+    <div id="stageWrap">
+      <canvas id="stage"></canvas>
+      <div class="kunye" id="kunye"><span class="ad">İLKNUR BUDAK</span><span class="eser">paintsound</span><span class="model"></span><span class="seed"></span></div>
+      <div id="hint">draw a line<br />up is high, down is low, fast is loud<br />each voice is a colour — 19 in the menu, 1&ndash;9 for the first nine<br />add pages with +page — playback runs the whole piece</div>
+    </div>
+  </div>
+
+  <script src="scales.js"></script>
+  <script src="synth.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // künye: seçili gam ve sayfa sayısı
+    (function () {
+      var k = document.getElementById("kunye");
+      var scale = document.getElementById("scale");
+      var root = document.getElementById("root");
+      var page = document.getElementById("pageInd");
+      if (!k || !scale || !root || !page) return;
+
+      function yaz() {
+        var g = (root.value || "") + " " + (scale.value || "");
+        k.querySelector(".model").textContent = g.trim();
+        k.querySelector(".seed").textContent = "page " + page.textContent;
+      }
+
+      yaz();
+      scale.addEventListener("change", yaz);
+      root.addEventListener("change", yaz);
+      new MutationObserver(yaz).observe(page, { childList: true, characterData: true, subtree: true });
+    })();
+
+    // fade the hint away once drawing starts
+    (function () {
+      var hint = document.getElementById("hint");
+      var stage = document.getElementById("stage");
+      stage.addEventListener("pointerdown", function () { if (hint) hint.style.display = "none"; }, { once: true });
+    })();
+  </script>
+</body>
+</html>

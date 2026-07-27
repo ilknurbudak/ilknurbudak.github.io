@@ -1,0 +1,71 @@
+{
+  "stages": [
+    {
+      "stage": "01_raw_noise",
+      "w": 1158,
+      "h": 1600,
+      "layers": {
+        "yellow": {
+          "png": "01_raw_noise_yellow.png",
+          "lines": "01_raw_noise_yellow.json",
+          "count": 355
+        }
+      },
+      "composite": "01_raw_noise_all.png"
+    },
+    {
+      "stage": "02_structural_recognition",
+      "w": 1129,
+      "h": 1600,
+      "layers": {
+        "yellow": {
+          "png": "02_structural_recognition_yellow.png",
+          "lines": "02_structural_recognition_yellow.json",
+          "count": 348
+        },
+        "black": {
+          "png": "02_structural_recognition_black.png",
+          "lines": "02_structural_recognition_black.json",
+          "count": 423
+        }
+      },
+      "composite": "02_structural_recognition_all.png"
+    },
+    {
+      "stage": "03_palimpsest_layer",
+      "w": 1126,
+      "h": 1600,
+      "layers": {
+        "green": {
+          "png": "03_palimpsest_layer_green.png",
+          "lines": "03_palimpsest_layer_green.json",
+          "count": 30
+        },
+        "black": {
+          "png": "03_palimpsest_layer_black.png",
+          "lines": "03_palimpsest_layer_black.json",
+          "count": 319
+        }
+      },
+      "composite": "03_palimpsest_layer_all.png"
+    },
+    {
+      "stage": "04_recursive_human",
+      "w": 1129,
+      "h": 1600,
+      "layers": {
+        "black": {
+          "png": "04_recursive_human_black.png",
+          "lines": "04_recursive_human_black.json",
+          "count": 1754
+        },
+        "green": {
+          "png": "04_recursive_human_green.png",
+          "lines": "04_recursive_human_green.json",
+          "count": 1
+        }
+      },
+      "composite": "04_recursive_human_all.png"
+    }
+  ]
+}
