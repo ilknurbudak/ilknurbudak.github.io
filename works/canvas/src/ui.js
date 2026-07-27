@@ -123,7 +123,7 @@ function buildSources() {
     const m = el('label', 'mini');
     const mc = el('input'); mc.type = 'checkbox'; mc.checked = s.matte;
     mc.onchange = () => { s.matte = mc.checked; invalidateEdges(); draw(); };
-    m.appendChild(mc); m.appendChild(el('span', null, 'KÂĞIDI AYIKLA'));
+    m.appendChild(mc); m.appendChild(el('span', null, 'CUT OUT PAPER'));
     card.appendChild(m);
 
     const iv = el('label', 'mini');

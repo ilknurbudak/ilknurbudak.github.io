@@ -158,6 +158,46 @@
         padding:14px 16px 28px;
       }
     }
+  
+
+    /* --- telefon: parmakla kullanılacak ölçüler --------------------------
+       44px dokunma hedefi, kalın topuz, 16px yazı (iOS yakınlaştırmasın). */
+    @media (max-width:900px){
+      aside{ font-size:15px; }
+
+      aside h1{ font-size:16px; }
+      .subtitle{ font-size:11px; letter-spacing:1px; margin-bottom:22px; }
+      .section-title{ font-size:11px; margin-bottom:12px; padding-bottom:8px; }
+      .section{ margin-bottom:26px; }
+
+      .key-row{
+        min-height:44px;
+        padding:10px 0;
+        font-size:15px;
+      }
+
+      .key{ font-size:12px; padding:5px 10px; }
+
+      .save-btn,
+      aside button{
+        min-height:46px;
+        font-size:15px;
+      }
+
+      .palet{ padding:12px; }
+      .palet-ad{ font-size:11px; margin-bottom:8px; }
+      .palet-seritler{ height:22px; }
+      .palet-secim{ gap:12px; }
+
+      .palette-color{ width:22px; height:22px; }
+      .palette-preview{ gap:4px; }
+
+      .hint{ font-size:12px; line-height:1.6; margin-top:22px; }
+
+      input[type=range]{ height:34px; }
+      input[type=checkbox]{ width:22px; height:22px; }
+      select, input[type=text], input[type=number]{ min-height:46px; font-size:16px; }
+    }
   </style>
 </head>
 <body>

@@ -88,6 +88,21 @@
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     graph = PSSynth.buildGraph(ctx, state.echo);
   }
+
+  // iOS: ses bağlamı yalnızca bir jest içinde ve bir ses çalınarak açılıyor.
+  let sesAcildi = false;
+  function unlockAudio() {
+    ensureAudio();
+    if (ctx.state === "suspended") ctx.resume();
+    if (sesAcildi) return;
+    sesAcildi = true;
+    const b = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const k = ctx.createBufferSource();
+    k.buffer = b; k.connect(ctx.destination); k.start(0);
+  }
+  ["touchend", "pointerdown"].forEach((t) =>
+    window.addEventListener(t, unlockAudio, { passive: true })
+  );
   function startPlayback() {
     ensureAudio();
     if (ctx.state === "suspended") ctx.resume();

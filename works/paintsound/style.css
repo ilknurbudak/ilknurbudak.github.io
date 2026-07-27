@@ -209,3 +209,16 @@ html, body {
   #bar .group label { width: auto; }
   #bar select { flex: 0 1 auto; }
 }
+
+/* --- telefon: parmakla kullanılacak ölçüler --- */
+@media (max-width: 900px) {
+  #bar { font-size: 15px; }
+  #bar button { min-height: 46px; padding: 10px 16px; font-size: 15px; }
+  #bar button.mini { min-width: 46px; padding: 10px 14px; font-size: 18px; }
+  #bar select { min-height: 46px; font-size: 16px; padding: 10px 12px; }
+  #bar label { font-size: 12px; }
+  #bar .val { font-size: 13px; min-width: 38px; }
+  #bar input[type="range"] { height: 34px; min-width: 120px; }
+  #bar .group { gap: 10px; }
+  #bar .status { font-size: 12px; width: 100%; }
+}
