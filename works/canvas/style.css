@@ -155,3 +155,18 @@ select { border-radius: 0; appearance: none; cursor: pointer; }
 /* Sitede yayınlanan kopya: video çıkışları yerel sunucuya (server.py) bağlı,
    GitHub Pages'te Python çalışmıyor. Bu üç düğme burada gizli, PNG duruyor. */
 #saveseq, #saveprores, #savemp4 { display: none; }
+
+
+/* Telefon: tuval baskın kalsın, panel alta insin. */
+@media (max-width: 720px) {
+  body { grid-template-rows: 40px 1fr auto; }
+  main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .panel {
+    border-left: 0;
+    border-top: var(--line);
+    max-height: 30dvh;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bar { gap: 6px; overflow-x: auto; }
+  .transport { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+}

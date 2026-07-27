@@ -50,13 +50,21 @@
   }
   .kunye .ad{ font-weight:500; }
 
-  @media (max-width:640px), (max-height:420px){
-    body{ flex-direction:column; }
-    aside{
-      width:100%; height:auto; max-height:38%;
-      border-left:0; border-top:1px solid var(--line);
+  @media (max-width:720px), (max-height:420px){
+      body{ flex-direction:column; }
+      main{ flex:1 1 auto; min-height:0; }
+      aside{
+        flex:0 0 auto;
+        width:100%;
+        height:auto;
+        max-height:30dvh;
+        border-left:0;
+        border-top:1px solid var(--line);
+        overflow-y:auto;
+        padding:12px 14px 16px;
+        -webkit-overflow-scrolling:touch;
+      }
     }
-  }
   h1{font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; margin:0 0 18px}
   .sec{border-top:1px solid var(--line); padding:14px 0 4px}
   .sec:first-of-type{border-top:none}
