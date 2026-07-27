@@ -225,6 +225,7 @@
       <option value="w169">16:9 landscape</option>
     </select>
     <div class="note" id="pageNote"></div>
+    <div class="note">Tap the print for a new composition.</div>
   </div>
 
   <div class="sec">
@@ -1126,6 +1127,10 @@ function newSeed(){
 }
 document.getElementById('reseed').onclick=newSeed;
 document.getElementById('gen').onclick=newSeed;
+
+/* Baskıya dokunmak yeni bir kompozisyon üretir. */
+cv.style.cursor='pointer';
+cv.addEventListener('pointerdown',e=>{ e.preventDefault(); newSeed(); });
 document.getElementById('save').onclick=()=>{
   const sd=document.getElementById('seed').value;
   render(sd,PRINT_EDGE);
