@@ -1,5 +1,5 @@
 // Tarayıcı eski kopyayı göstermesin diye her yayında değişen damga.
-const SURUM = '1785170377';
+const SURUM = '1785560457';
 
 const ISLER = {
   'grid': {
@@ -12,35 +12,10 @@ const ISLER = {
     yol: 'works/echo-masks/index.html',
     metin: 'Brush strokes accumulating along flow fields in bilateral symmetry. The brain reads them as faces.'
   },
-  'kolaj': {
-    ad: 'Collage Workbench',
-    yol: 'works/kolaj/index.html',
-    metin: 'A seeded gestural collage generator. Builds abstract prints from source images or procedural gesture layers and lays them out as collage pages.'
-  },
-  'canvas': {
-    ad: 'CANVAS',
-    yol: 'works/canvas/index.html',
-    metin: 'A workbench for hand drawings. Drop a drawing in and layers turn over it — every frame is a function of time, so the loop closes seamlessly. Drop a PNG or JPG on the stage to begin.'
-  },
   'paintsound': {
     ad: 'paintsound',
     yol: 'works/paintsound/index.html',
     metin: 'Draw a line, hear it. The horizontal axis is time, the vertical axis is pitch. A playhead sweeps the loop and sounds every line it crosses.'
-  },
-  'ink': {
-    ad: 'ink',
-    yol: 'works/ink/index.html',
-    metin: 'A wet-ink silhouette. A drawing is read as a mask, and its interior and rim fill with blue-black ink that keeps flowing — a warped distance field running per pixel on the GPU.'
-  },
-  'recursive': {
-    ad: 'The Recursive Human',
-    yol: 'works/recursive/web/index.html',
-    metin: 'A digital palimpsest installation. Four hand drawings are read as a dataset and replayed as an endless loop of coding and erasure — the viewer\'s face enters, dissolves into noise, is recognised, is overwritten, and begins again. An experience book: move through it page by page.'
-  },
-  'nnc': {
-    ad: 'no noob color',
-    yol: 'works/nnc/index.html',
-    metin: 'A persona-aware colour palette tool. Extract from photographs, build and organise palettes, backed by real colour science — CIELAB, OKLab, ACES, Material 3 HCT, CIEDE2000 — behind a black and white interface.'
   }
 };
 
@@ -106,7 +81,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') perdeKapat()
 
 
 /* --- tablet ve telefon: kaydırmalı gezinme ------------------------------
-   Masaüstünde bu öğeler gizli. Sıra: sekiz iş, sonra about. */
+   Masaüstünde bu öğeler gizli. Sıra: katalogdaki işler, sonra about. */
 
 const SIRA = Object.keys(ISLER).concat('about');
 

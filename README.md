@@ -1,6 +1,6 @@
 # ilknur budak
 
-Portfolio site. Eight works, each running live in the browser, plus an about page.
+Portfolio site. Three works, each running live in the browser, plus an about page.
 No build step, no dependencies: open `index.html` and it runs.
 
 Live at [ilknurbudak.github.io](https://ilknurbudak.github.io)
@@ -22,12 +22,7 @@ uses as its variable, whether palette, seed, preset or page. It is drawn with
 |---|------|-----------|
 | 01 | Generative Grid | A grid of colour dissolving and reforming in bilateral symmetry. Each colour triggers its own note. |
 | 02 | Echo Masks | Brush strokes accumulating along flow fields. The brain reads them as faces. |
-| 03 | Collage Workbench | A seeded gestural collage generator. Abstract prints laid out as collage pages. |
-| 04 | CANVAS | A workbench for hand drawings. Every frame is a function of time, so the loop closes seamlessly. |
-| 05 | paintsound | Draw a line, hear it. Horizontal is time, vertical is pitch. |
-| 06 | ink | A drawing read as a mask; its interior and rim fill with ink that keeps flowing. Per pixel on the GPU. |
-| 07 | The Recursive Human | A digital palimpsest installation, read page by page. Four drawings as a dataset. |
-| 08 | no noob color | A persona-aware colour palette tool built on CIELAB, OKLab, ACES, HCT and CIEDE2000. |
+| 03 | paintsound | Draw a line, hear it. Horizontal is time, vertical is pitch. |
 
 ## Structure
 
@@ -38,13 +33,14 @@ script.js           which work loads into the stage
 works/
   grid/             single file
   echo-masks/       p5.js
+  paintsound/       Web Audio
+  about/
+arsiv/              works kept out of the catalogue, not linked from the site
   kolaj/            single file, canvas 2D and WebGL2
   canvas/           layer engine in src/, sample drawing in assets/
-  paintsound/       Web Audio
   ink/              WebGL2, needs a browser that supports it
   recursive/        multi page; web/ holds the pages, assets/ the data
   nnc/              built from the no-noob-color repo
-  about/
 ```
 
 ## Notes
@@ -53,9 +49,5 @@ Each work lives in its own frame, so one work cannot reach into another or into 
 page around it. Sound never starts on its own: Generative Grid and paintsound wait
 for a click, as browsers require.
 
-`no noob color` runs here without its backend, so the parts that need a server are
-not in this build: no sign in, no account, no prompt generation, no photo extraction.
-The interface, the colour science and the exports work.
-
-The Recursive Human's loop asks for the camera. Nothing is uploaded; the frames stay
-in the browser.
+`arsiv/` holds works that are no longer in the catalogue. Their files stay in the
+repository and still run, but nothing on the site links to them.
